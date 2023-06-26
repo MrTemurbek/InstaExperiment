@@ -28,17 +28,8 @@ public class InstagramExperimentResource {
     @Path("/download")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public String download(InstagramRequest request) {
-        instagram.getLinkVideo(request.getUrl());
-        return "Success";
-    }
-
-    @POST
-    @Path("/telegram")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public String sendMessage(InstagramRequest request) throws IOException, InterruptedException {
-        telegramService.sendVideoToBotFromUrl(request.getUrl());
+    public String download(@RequestBody InstagramRequest request) throws IOException, InterruptedException {
+        instagram.getLinkVideo(request);
         return "Success";
     }
 }

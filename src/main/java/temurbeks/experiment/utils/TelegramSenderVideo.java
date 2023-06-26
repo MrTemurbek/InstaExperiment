@@ -7,17 +7,16 @@ import java.io.File;
 import java.io.IOException;
 
 public class TelegramSenderVideo {
-    private final static String CHAT_ID = "-1001529421660";
     private final static String BOT_TOKEN= "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
 
-    public void sendVideo(String videoFilePath) throws IOException {
+    public void sendVideo(String videoFilePath, String chat) throws IOException {
         OkHttpClient client = new OkHttpClient();
 
         File videoFile = new File(videoFilePath);
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("chat_id", CHAT_ID)
+                .addFormDataPart("chat_id", chat)
                 .addFormDataPart("video", videoFile.getName(),
                         RequestBody.create(MediaType.parse("video/mp4"), videoFile))
                 .build();

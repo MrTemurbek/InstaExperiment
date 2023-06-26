@@ -20,7 +20,6 @@ import java.util.Map;
 
 @ApplicationScoped
 public class TelegramServiceImpl implements TelegramService {
-    public final static Map<String, String> map = new HashMap<String, String>();
     @Override
     public void sendVideoToBotFromUrl(String videoUrl, String mainUrl, LocalDateTime time, String chatId) throws IOException, InterruptedException {
         DownloaderVideo videoDownloader = new DownloaderVideo();
@@ -37,7 +36,7 @@ public class TelegramServiceImpl implements TelegramService {
         TelegramSenderVideo telegramSenderVideo = new TelegramSenderVideo();
         LocalDateTime sendTime = LocalDateTime.now();
         try {
-            telegramSenderVideo.sendVideo(savePath);
+            telegramSenderVideo.sendVideo(savePath, chatId);
         }
         catch (Exception e){
             e.printStackTrace();

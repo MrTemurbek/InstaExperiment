@@ -1,5 +1,5 @@
-package temurbeks.experiment.service.serviceImpl;
+package temurbeks.experiment.service;
 
-public interface InstagramServiceImpl {
+public interface InstagramService {
     String getLinkVideo(String url);
 }

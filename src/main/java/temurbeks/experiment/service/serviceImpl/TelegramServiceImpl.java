@@ -1,20 +1,19 @@
-package temurbeks.experiment.service;
+package temurbeks.experiment.service.serviceImpl;
 
-import jakarta.annotation.Resource;
+
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.UriBuilder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import temurbeks.experiment.service.serviceImpl.TelegramServiceImpl;
-
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import temurbeks.experiment.service.TelegramService;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -24,10 +23,12 @@ import java.util.Map;
 
 
 @ApplicationScoped
-public class TelegramService implements TelegramServiceImpl {
+public class TelegramServiceImpl implements TelegramService {
     public final static Map<String, String> map = new HashMap<String, String>();
-    private static final String CHAT_ID = "-1001529421660";
-    private static final String TOKEN = "5554490736:AAEIf3SCkORKKYg9wnAaVypWHVLj2Ttd_vQ";
+    @ConfigProperty(name = "telegram.channel.chat.id")
+     String CHAT_ID;
+    @ConfigProperty(name = "telegrambot.token")
+    String TOKEN;
 
     @Override
     public void sendVideoToBotFromUrl(String videoUrl) throws IOException, InterruptedException {
@@ -35,8 +36,6 @@ public class TelegramService implements TelegramServiceImpl {
                 .connectTimeout(Duration.ofSeconds(5))
                 .version(HttpClient.Version.HTTP_2)
                 .build();
-
-        String videoCaption = "Описание видео";
 
         // Создание временного файла для сохранения видео
         File tempFile = File.createTempFile("video", ".mp4");
@@ -69,8 +68,7 @@ public class TelegramService implements TelegramServiceImpl {
         UriBuilder builder = UriBuilder
                 .fromUri("https://api.telegram.org")
                 .path("/{token}/sendVideo")
-                .queryParam("chat_id", CHAT_ID)
-                .queryParam("caption", videoCaption);
+                .queryParam("chat_id", CHAT_ID);
 
         HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofFile(tempFile.toPath());
         HttpRequest request = HttpRequest.newBuilder()

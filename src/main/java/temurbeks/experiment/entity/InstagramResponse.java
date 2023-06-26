@@ -1,5 +1,8 @@
-package temurbeks.experiment;
+package temurbeks.experiment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties
 public class InstagramResponse {
     private long takenAt;
     private long pk;

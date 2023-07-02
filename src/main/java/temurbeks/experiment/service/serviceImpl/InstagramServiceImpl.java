@@ -70,11 +70,11 @@ public class InstagramServiceImpl implements InstagramService {
                 temporaryResponse= responseData;
             } catch (IOException e) {
                 e.printStackTrace();
-                return "Error occurred while fetching data from JSONPlaceholder";
+                return "Error occurred while fetching data from JSON";
             }
-        String responseUrl = extractUrlFromData(temporaryResponse.getData());
+        List<String> responseUrl = extractUrlsFromData(temporaryResponse.getData());
         try {
-            telegramService.sendVideoToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat());
+            telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat());
         } catch (Exception e) {
             System.out.println(e);
             throw new RuntimeException("ERROR TELEGRAM");
@@ -82,13 +82,25 @@ public class InstagramServiceImpl implements InstagramService {
         return "SUCCESS";
     }
 
-    private static String extractUrlFromData(String data) {
+    private static List<String> extractUrlsFromData(String data) {
+        List<String> urls = new ArrayList<>();
         String startToken = "href=\"";
         String endToken = "\"";
-        int startIndex = data.indexOf(startToken);
-        int endIndex = data.indexOf(endToken, startIndex + startToken.length());
+        int startIndex = 0;
 
-        return data.substring(startIndex + startToken.length(), endIndex);
+        while (startIndex >= 0) {
+            startIndex = data.indexOf(startToken, startIndex);
+            if (startIndex >= 0) {
+                int endIndex = data.indexOf(endToken, startIndex + startToken.length());
+                if (endIndex >= 0) {
+                    String url = data.substring(startIndex + startToken.length(), endIndex);
+                    urls.add(url);
+                    startIndex = endIndex;
+                }
+            }
+        }
+
+        return urls;
     }
 }
 

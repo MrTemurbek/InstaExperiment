@@ -20,10 +20,6 @@ public class InstagramExperimentResource {
 
     @Inject
     InstagramService instagram;
-
-    @Inject
-    TelegramService telegramService;
-
     @POST
     @Path("/download")
     @Produces(MediaType.APPLICATION_JSON)

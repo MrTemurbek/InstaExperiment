@@ -1,30 +1,29 @@
 package temurbeks.experiment.insta;
 
-import temurbeks.experiment.utils.TelegramSenderVideo;
+import temurbeks.experiment.utils.TelegramSender;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-public class ReelsDownloader {
-    public Boolean reels(ArrayList urls, String chatId) throws IOException, InterruptedException {
-        TelegramSenderVideo telegramSenderVideo = new TelegramSenderVideo();
+public class InstagramPhotoAndVideoDownloader {
+    public Boolean download(ArrayList urls, String chatId){
+        TelegramSender telegramSender = new TelegramSender();
         Boolean result = false;
         try {
             if (urls.size() > 5) {
 
                 List<String> firstPart = urls.subList(0, Math.min(urls.size(), 5));
                 List<String> secondPart = urls.subList(Math.min(urls.size(), 5), urls.size());
-                Integer r1 = telegramSenderVideo.sendVideo(new ArrayList(firstPart), chatId);
+                Integer r1 = telegramSender.sendMedia(new ArrayList(firstPart), chatId);
                 Thread.sleep(6 * 1000);
-                Integer r2 = telegramSenderVideo.sendVideo(new ArrayList(secondPart), chatId);
+                Integer r2 = telegramSender.sendMedia(new ArrayList(secondPart), chatId);
                 if (r1.equals(200) & r2.equals(200)) {
                     result= true;
                     return true;
                 }
             } else {
-                if (telegramSenderVideo.sendVideo(urls, chatId).equals(200)){
+                if (telegramSender.sendMedia(urls, chatId).equals(200)){
                     result= true;
                     return true;
                 }

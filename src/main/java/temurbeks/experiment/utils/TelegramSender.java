@@ -5,14 +5,13 @@ import okhttp3.*;
 import temurbeks.experiment.entity.FinalTGRequest;
 
 import java.io.IOException;
-import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
 
-public class TelegramSenderVideo {
+public class TelegramSender {
     private final static String BOT_TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
 
-    public Integer sendVideo(ArrayList urls, String chat) throws IOException, InterruptedException {
+    public Integer sendMedia(ArrayList urls, String chat) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .callTimeout(Duration.ofSeconds(30))
                 .build();
@@ -31,24 +30,24 @@ public class TelegramSenderVideo {
                 .post(requestBody)
                 .build();
         Response response = null;
-        try  {
-            response= client.newCall(request).execute();
-            System.out.println("resp :"+ response);
+        try {
+            response = client.newCall(request).execute();
+            System.out.println("resp :" + response);
             response.body().close();
             response.close();
             if (response.isSuccessful()) {
-                System.out.println("Video sent successfully!");
+                System.out.println("Operation completed successfully!");
                 client.dispatcher().cancelAll();
                 client.connectionPool().evictAll();
                 return response.code();
 
             } else {
-                System.out.println("Failed to send video. Response: " + response.body().string());
+                System.out.println("Failed to send media. Response: " + response.body().string());
                 response.body().close();
                 return response.code();
             }
         } catch (Exception e) {
-            System.out.println("resp :"+ response);
+            System.out.println("resp :" + response);
             response.body().close();
             System.out.println(e);
             return response.code();

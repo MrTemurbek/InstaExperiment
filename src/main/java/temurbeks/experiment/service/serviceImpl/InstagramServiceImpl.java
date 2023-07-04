@@ -1,26 +1,19 @@
 package temurbeks.experiment.service.serviceImpl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.TemporaryResponse;
+import temurbeks.experiment.entity.Type;
 import temurbeks.experiment.service.InstagramService;
 import temurbeks.experiment.service.TelegramService;
 import jakarta.inject.Inject;
+import temurbeks.experiment.utils.GetDownloadUrlHelper;
 import temurbeks.experiment.utils.SendMessageToBot;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,45 +29,33 @@ public class InstagramServiceImpl implements InstagramService {
     TelegramService telegramService;
 
     @Override
-    public String getLinkVideo(InstagramRequest data){
+    public String getLinkVideo(InstagramRequest data) throws JsonProcessingException {
+        SendMessageToBot sendMessageToBot =new SendMessageToBot();
         try {
-            new SendMessageToBot().sendMessage("Скачивание началось !", data.getChat());
+            sendMessageToBot.sendMessage("Скачивание началось ! " +
+                    "\n url: " +data.getUrl() , data.getChat());
         }
         catch (Exception ignored){}
+        Type instaType = getInstaType(data.getUrl());
         LocalDateTime requestTime = LocalDateTime.now();
         int index = data.getUrl().indexOf("?");
-        TemporaryResponse temporaryResponse ;
         if (index != -1) {
 //            url = url.substring(0, index) + "?__a=1&__d=dis";
         }
         else {
 //            url =url+"?__a=1&__d=dis";
         }
-            HttpClient httpClient = HttpClientBuilder.create().build();
-            HttpPost request = new HttpPost("https://igdownloader.app/api/ajaxSearch");
+        List<String> responseUrl = new ArrayList<>();
+        if (instaType.equals(Type.STORIES)){
 
-            // Создаем список пар "имя"-"значение" для формы данных
-            List<NameValuePair> formParams = new ArrayList<>();
-            formParams.add(new BasicNameValuePair("q", data.getUrl()));
-            formParams.add(new BasicNameValuePair("t", "media"));
-
-            try {
-                // Создаем объект UrlEncodedFormEntity и устанавливаем его в качестве сущности запроса
-                HttpEntity entity = new UrlEncodedFormEntity(formParams);
-                request.setEntity(entity);
-
-                HttpResponse response = httpClient.execute(request);
-                HttpEntity entity1 = response.getEntity();
-                String json = EntityUtils.toString(entity1);
-                TemporaryResponse responseData = new ObjectMapper().readValue(json, TemporaryResponse.class);
-                temporaryResponse= responseData;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return "Error occurred while fetching data from JSON";
-            }
-        List<String> responseUrl = extractUrlsFromData(temporaryResponse.getData());
+        }
+        else {
+            String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType);
+            TemporaryResponse temporaryResponse = new ObjectMapper().readValue(json, TemporaryResponse.class);
+            responseUrl = extractUrlsFromData(temporaryResponse.getData());
+        }
         try {
-            telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat());
+            telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat(), instaType,sendMessageToBot );
         } catch (Exception e) {
             System.out.println(e);
             throw new RuntimeException("ERROR TELEGRAM");
@@ -94,13 +75,26 @@ public class InstagramServiceImpl implements InstagramService {
                 int endIndex = data.indexOf(endToken, startIndex + startToken.length());
                 if (endIndex >= 0) {
                     String url = data.substring(startIndex + startToken.length(), endIndex);
-                    urls.add(url);
+                    if (url.contains(".xyz")){
+                        urls.add(url);
+                    }
                     startIndex = endIndex;
                 }
             }
         }
 
         return urls;
+    }
+    
+    private Type getInstaType(String url){
+        if (url.contains(".com/reel")){
+            return Type.REELS;
+        } else if (url.contains(".com/stories/")) {
+            return Type.STORIES;
+        }
+        else {
+            return Type.POST;
+        }
     }
 }
 

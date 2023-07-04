@@ -13,7 +13,7 @@ public class SendMessageToBot {
 
     public void sendMessage(String text, String chat) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+                .connectTimeout(Duration.ofSeconds(15))
                 .version(HttpClient.Version.HTTP_2)
                 .build();
         UriBuilder builder = UriBuilder
@@ -24,10 +24,11 @@ public class SendMessageToBot {
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(builder.build("bot" + TOKEN))
-                .timeout(Duration.ofSeconds(5))
+                .timeout(Duration.ofSeconds(15))
                 .build();
         client
                 .send(request, HttpResponse.BodyHandlers.ofString());
+
         System.out.println("SUCCESS!");
     }
 }

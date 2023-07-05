@@ -13,13 +13,14 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import temurbeks.experiment.entity.TemporaryResponse;
 import temurbeks.experiment.entity.Type;
+import temurbeks.experiment.exception.MyException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GetDownloadUrlHelper {
-    public String getUrl(String url, Type type){
+    public String getUrl(String url, Type type, String chat) throws IOException, InterruptedException {
         if (type.equals(Type.REELS) || type.equals(Type.POST)){
             HttpClient httpClient = HttpClientBuilder.create().build();
             HttpPost request = new HttpPost("https://igdownloader.app/api/ajaxSearch");
@@ -53,12 +54,19 @@ public class GetDownloadUrlHelper {
 
             try {
                 HttpResponse response = httpClient.execute(request);
+                if (response.getStatusLine().getStatusCode()==500){
+                    throw new MyException();
+                }
                 HttpEntity entity1 = response.getEntity();
                 String json = EntityUtils.toString(entity1);
                 return json;
             } catch (IOException e) {
                 e.printStackTrace();
                 return "Error occurred while fetching data from JSON";
+            }catch (MyException e){
+                SendMessageToBot sendMessageToBot = new SendMessageToBot();
+                sendMessageToBot.sendMessage("🔒 Видимо закрытый аккаунт 🔒 либо ❌ Сервер не работает ❌", chat);
+                throw new RuntimeException("zakritiy akkaunt");
             }
 
         }

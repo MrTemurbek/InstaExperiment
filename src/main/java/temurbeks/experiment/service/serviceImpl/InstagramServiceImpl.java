@@ -21,6 +21,7 @@ import jakarta.inject.Inject;
 import temurbeks.experiment.utils.GetDownloadUrlHelper;
 import temurbeks.experiment.utils.SendMessageToBot;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +35,11 @@ public class InstagramServiceImpl implements InstagramService {
     TelegramService telegramService;
 
     @Override
-    public String getLinkVideo(InstagramRequest data) throws JsonProcessingException {
+    public String getLinkVideo(InstagramRequest data) throws IOException, InterruptedException {
         SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
             sendMessageToBot.sendMessage("Скачивание началось ! ✔️ " +
-                    "\n Ссылка на видео 🔗: " + data.getUrl(), data.getChat());
+                    "\n Ссылка 🔗: " + data.getUrl(), data.getChat());
         } catch (Exception ignored) {
         }
         instaType = getInstaType(data.getUrl());
@@ -49,12 +50,11 @@ public class InstagramServiceImpl implements InstagramService {
         } else {
 //            url =url+"?__a=1&__d=dis";
         }
-        List<String> responseUrl = new ArrayList<>();
+        List<String> responseUrl;
+        String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType, data.getChat());
         if (instaType.equals(Type.STORIES)) {
-            String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType);
             responseUrl = extractUrlsFromData(json);
         } else {
-            String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType);
             TemporaryResponse temporaryResponse = new ObjectMapper().readValue(json, TemporaryResponse.class);
             responseUrl = extractUrlsFromData(temporaryResponse.getData());
         }
@@ -113,7 +113,6 @@ public class InstagramServiceImpl implements InstagramService {
     }
 
     public static List getDownloadUrlForStories(String data){
-        System.out.println("data" + data);
         Gson gson = new Gson();
         JsonParser jsonParser = new JsonParser();
         JsonElement rootElement = jsonParser.parse(data);

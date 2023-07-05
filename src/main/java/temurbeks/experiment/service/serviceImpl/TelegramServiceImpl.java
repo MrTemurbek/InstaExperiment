@@ -33,15 +33,23 @@ public class TelegramServiceImpl implements TelegramService {
                 result = new InstagramPhotoAndVideoDownloader().download(requests, chatId);
             }
 
-            if (result.equals(Boolean.TRUE)) {
-                LocalDateTime timeDone = LocalDateTime.now();
-                sendMessageToBot.sendMessage("Видео обработано за " + difference(time, timeDone) + " секунды ⏳", chatId);
+            if (result){
+                if (type.equals(Type.POST)){
+                    LocalDateTime timeDone = LocalDateTime.now();
+                    sendMessageToBot.sendMessage("Фотография обработано за " + difference(time, timeDone) + " секунды ⏳", chatId);
 
+                }
+                else {
+                    LocalDateTime timeDone = LocalDateTime.now();
+                    sendMessageToBot.sendMessage("Видео обработано за " + difference(time, timeDone) + " секунды ⏳", chatId);
+
+                }
             } else {
                 sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
             }
             new DeleteAllInFolder().deleteInFolder();
         } catch (Exception e) {
+            sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
             e.printStackTrace();
             System.out.println(e);
         }

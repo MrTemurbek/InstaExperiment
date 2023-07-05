@@ -6,6 +6,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -44,8 +45,22 @@ public class GetDownloadUrlHelper {
 
         }
         else {
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            String fullUrl = "https://igram.world/api/ig/story" + "?" + "url" + "=" + url;
 
-            return null;
+            HttpGet request = new HttpGet(fullUrl);
+
+
+            try {
+                HttpResponse response = httpClient.execute(request);
+                HttpEntity entity1 = response.getEntity();
+                String json = EntityUtils.toString(entity1);
+                return json;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return "Error occurred while fetching data from JSON";
+            }
+
         }
     }
 }

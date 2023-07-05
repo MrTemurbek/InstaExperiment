@@ -1,6 +1,11 @@
 package temurbeks.experiment.service.serviceImpl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
 import jakarta.enterprise.context.ApplicationScoped;
 
 
@@ -9,9 +14,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import temurbeks.experiment.entity.InstagramRequest;
-import temurbeks.experiment.entity.TemporaryResponse;
-import temurbeks.experiment.entity.Type;
+import temurbeks.experiment.entity.*;
 import temurbeks.experiment.service.InstagramService;
 import temurbeks.experiment.service.TelegramService;
 import jakarta.inject.Inject;
@@ -21,6 +24,7 @@ import temurbeks.experiment.utils.SendMessageToBot;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 @ApplicationScoped
@@ -47,7 +51,8 @@ public class InstagramServiceImpl implements InstagramService {
         }
         List<String> responseUrl = new ArrayList<>();
         if (instaType.equals(Type.STORIES)) {
-
+            String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType);
+            responseUrl = extractUrlsFromData(json);
         } else {
             String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType);
             TemporaryResponse temporaryResponse = new ObjectMapper().readValue(json, TemporaryResponse.class);
@@ -66,7 +71,7 @@ public class InstagramServiceImpl implements InstagramService {
         if (instaType.equals(Type.POST) || instaType.equals(Type.REELS)) {
             return imageSrcOrHrefExtractor(data);
         } else {
-            return null;
+            return getDownloadUrlForStories(data);
         }
     }
 
@@ -106,5 +111,67 @@ public class InstagramServiceImpl implements InstagramService {
             }
         return srcUrl;
     }
+
+    public static List getDownloadUrlForStories(String data){
+        System.out.println("data" + data);
+        Gson gson = new Gson();
+        JsonParser jsonParser = new JsonParser();
+        JsonElement rootElement = jsonParser.parse(data);
+
+        JsonObject jsonObject = rootElement.getAsJsonObject();
+        JsonArray videoVersions = null;
+        try {
+            videoVersions = jsonObject.get("result")
+                    .getAsJsonArray().get(0).getAsJsonObject()
+                    .get("video_versions").getAsJsonArray();
+        }
+        catch (Exception ignored){
+
+        }
+        JsonArray candidates =jsonObject.get("result")
+                .getAsJsonArray().get(0).getAsJsonObject()
+                .get("image_versions2").getAsJsonObject()
+                .get("candidates").getAsJsonArray();
+
+
+        if (videoVersions == null ) {
+            for (JsonElement element : candidates) {
+                JsonObject candidate = element.getAsJsonObject();
+                int width = candidate.get("width").getAsInt();
+                int height = candidate.get("height").getAsInt();
+                String url = candidate.get("url").getAsString();
+                JsonObject urlSignatureObject = candidate.getAsJsonObject("url_signature");
+                UrlSignature urlSignature = gson.fromJson(urlSignatureObject, UrlSignature.class);
+
+                PhotoStories photoStory = new PhotoStories();
+                photoStory.setWidth(width);
+                photoStory.setHeight(height);
+                photoStory.setUrl(url);
+                photoStory.setUrl_signature(urlSignature);
+                instaType = Type.POST;
+                return List.of(photoStory.getUrl());
+            }
+        }
+        for (JsonElement element : videoVersions) {
+            JsonObject videoVersion = element.getAsJsonObject();
+            int type = videoVersion.get("type").getAsInt();
+            int width = videoVersion.get("width").getAsInt();
+            int height = videoVersion.get("height").getAsInt();
+            String url = videoVersion.get("url").getAsString();
+            JsonObject urlSignatureObject = videoVersion.getAsJsonObject("url_signature");
+            UrlSignature urlSignature = gson.fromJson(urlSignatureObject, UrlSignature.class);
+
+            VideoStories videoStory = new VideoStories();
+            videoStory.setType(type);
+            videoStory.setWidth(width);
+            videoStory.setHeight(height);
+            videoStory.setUrl(url);
+            videoStory.setUrl_signature(urlSignature);
+            return List.of(videoStory.getUrl());
+        }
+        throw  new NoSuchElementException("Такое не возможно, или код не правильный");
+    }
+
+
 }
 

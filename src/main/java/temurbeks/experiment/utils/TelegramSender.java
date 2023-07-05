@@ -1,9 +1,13 @@
 package temurbeks.experiment.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import okhttp3.*;
 import temurbeks.experiment.entity.FinalTGRequest;
+import temurbeks.experiment.entity.TelegramRequest;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -11,15 +15,17 @@ import java.util.ArrayList;
 public class TelegramSender {
     private final static String BOT_TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
 
-    public Integer sendMedia(ArrayList urls, String chat) {
+    public Integer sendMedia(ArrayList<TelegramRequest> urls, String chat) throws IOException, InterruptedException {
         OkHttpClient client = new OkHttpClient.Builder()
                 .callTimeout(Duration.ofSeconds(30))
                 .build();
         FinalTGRequest finalTGRequest = new FinalTGRequest(urls, chat);
-        Gson gson = new Gson();
+
 
         // Преобразование объекта в JSON-строку
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String json = gson.toJson(finalTGRequest);
+        System.out.println("json request " + json);
         // Установка типа контента как application/json
         MediaType mediaType = MediaType.parse("application/json");
         // Создание экземпляра RequestBody с JSON-строкой
@@ -32,7 +38,6 @@ public class TelegramSender {
         Response response = null;
         try {
             response = client.newCall(request).execute();
-            System.out.println("resp :" + response);
             response.body().close();
             response.close();
             if (response.isSuccessful()) {
@@ -48,10 +53,48 @@ public class TelegramSender {
             }
         } catch (Exception e) {
             System.out.println("resp :" + response);
+            if (response.code()==400){
+                if (sendBigVideo(urls.get(0).getMedia(),chat)){
+                    return 200;
+                }
+            }
             response.body().close();
             System.out.println(e);
             return response.code();
         }
     }
+
+    public static Boolean sendBigVideo(String url, String chat) throws IOException, InterruptedException {
+        new SendMessageToBot().sendMessage("Походу файл большой, попытаемся скачать и отправить вам, это займёт время, пожалуйста ждите 🤞", chat);
+        String videoFilePath = "video/sample.mp4";
+        if (new DownloaderVideo().downloadVideo(url, videoFilePath)){
+            new SendMessageToBot().sendMessage("Скачали ! Отправляем 👌", chat);
+        }
+        else {
+            new SendMessageToBot().sendMessage("Не получилось скачать ☹️", chat);
+            return false;
+        }
+        OkHttpClient client = new OkHttpClient();
+        File videoFile = new File(videoFilePath);
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("chat_id", chat)
+                .addFormDataPart("video", videoFile.getName(),
+                        RequestBody.create(MediaType.parse("video/mp4"), videoFile))
+                .build();
+
+        Request request = new Request.Builder()
+                .url("https://api.telegram.org/bot" + BOT_TOKEN + "/sendVideo")
+                .post(requestBody)
+                .build();
+
+
+        try (Response response = client.newCall(request).execute()) {
+            response.close();
+            return response.isSuccessful();
+        }
+    }
+
 }
 

@@ -25,9 +25,6 @@ import java.util.List;
 
 @ApplicationScoped
 public class InstagramServiceImpl implements InstagramService {
-    //    @Inject
-//    @RestClient
-//    IgDownloaderRest igDownloaderRest;
     static Type instaType;
     @Inject
     TelegramService telegramService;
@@ -36,8 +33,8 @@ public class InstagramServiceImpl implements InstagramService {
     public String getLinkVideo(InstagramRequest data) throws JsonProcessingException {
         SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
-            sendMessageToBot.sendMessage("Скачивание началось ! " +
-                    "\n url: " + data.getUrl(), data.getChat());
+            sendMessageToBot.sendMessage("Скачивание началось ! ✔️ " +
+                    "\n Ссылка на видео 🔗: " + data.getUrl(), data.getChat());
         } catch (Exception ignored) {
         }
         instaType = getInstaType(data.getUrl());
@@ -68,28 +65,6 @@ public class InstagramServiceImpl implements InstagramService {
     private static List<String> extractUrlsFromData(String data) {
         if (instaType.equals(Type.POST) || instaType.equals(Type.REELS)) {
             return imageSrcOrHrefExtractor(data);
-
-//            if (instaType.equals(Type.REELS)){
-//                List<String> urls = new ArrayList<>();
-//                String startToken = "href=\"";
-//                String endToken = "\"";
-//                int startIndex = 0;
-//
-//                while (startIndex >= 0) {
-//                    startIndex = data.indexOf(startToken, startIndex);
-//                    if (startIndex >= 0) {
-//                        int endIndex = data.indexOf(endToken, startIndex + startToken.length());
-//                        if (endIndex >= 0) {
-//                            String url = data.substring(startIndex + startToken.length(), endIndex);
-//                            if (url.contains(".xyz")){
-//                                urls.add(url);
-//                            }
-//                            startIndex = endIndex;
-//                        }
-//                    }
-//                }
-//
-//                return urls;
         } else {
             return null;
         }

@@ -35,10 +35,10 @@ public class TelegramServiceImpl implements TelegramService {
 
                 if (result.equals(Boolean.TRUE)) {
                     LocalDateTime timeDone = LocalDateTime.now();
-                    sendMessageToBot.sendMessage("DOWNLOADED IN: " + difference(time, timeDone) + " seconds !", chatId);
+                    sendMessageToBot.sendMessage("Скачано за " + difference(time, timeDone) + " секунды ⏳", chatId);
 
                 } else {
-                    sendMessageToBot.sendMessage("Unsuccessful :(", chatId);
+                    sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -48,7 +48,7 @@ public class TelegramServiceImpl implements TelegramService {
             new DeleteAllInFolder().deleteInFolder();
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("here " + e);
+            System.out.println( e);
         }
     }
 

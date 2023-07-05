@@ -1,6 +1,7 @@
 package temurbeks.experiment.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -38,10 +39,27 @@ public class GetDownloadUrlHelper {
                 HttpResponse response = httpClient.execute(request);
                 HttpEntity entity1 = response.getEntity();
                 String json = EntityUtils.toString(entity1);
+                Gson gson = new Gson();
+                JsonParser jsonParser = new JsonParser();
+                JsonElement rootElement = jsonParser.parse(json);
+
+                JsonObject jsonObject = rootElement.getAsJsonObject();
+                try {
+                    String mess = jsonObject.get("mess").getAsString();
+                    if (mess.contains("Video is private")){
+                        throw new MyException();
+                    }
+                }catch (NullPointerException ignored){
+
+                }
                 return json;
             } catch (IOException e) {
                 e.printStackTrace();
                 return "Error occurred while fetching data from JSON";
+            }catch (MyException e) {
+                SendMessageToBot sendMessageToBot = new SendMessageToBot();
+                sendMessageToBot.sendMessage(" ❌❌❌ Обработка не удалась ❌❌❌\n 🔒 Закрытый аккаунт 🔒", chat);
+                throw new RuntimeException("zakritiy akkaunt");
             }
 
         }
@@ -65,7 +83,7 @@ public class GetDownloadUrlHelper {
                 return "Error occurred while fetching data from JSON";
             }catch (MyException e){
                 SendMessageToBot sendMessageToBot = new SendMessageToBot();
-                sendMessageToBot.sendMessage("🔒 Видимо закрытый аккаунт 🔒 либо ❌ Сервер не работает ❌", chat);
+                sendMessageToBot.sendMessage("  ❌❌❌ Обработка не удалась ❌❌❌ \n 🔒 Видимо закрытый аккаунт 🔒 \n или \uD83E\uDEAB Сервер не работает \uD83E\uDEAB", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }
 

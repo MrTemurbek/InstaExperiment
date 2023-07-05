@@ -8,6 +8,7 @@ import temurbeks.experiment.service.TelegramService;
 import temurbeks.experiment.utils.DeleteAllInFolder;
 import temurbeks.experiment.utils.SendMessageToBot;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.List;
 @ApplicationScoped
 public class TelegramServiceImpl implements TelegramService {
     @Override
-    public void sendAllToBotFromUrl(List<String> urls, String mainUrl, LocalDateTime time, String chatId, Type type, SendMessageToBot sendMessageToBot) {
+    public void sendAllToBotFromUrl(List<String> urls, String mainUrl, LocalDateTime time, String chatId, Type type, SendMessageToBot sendMessageToBot) throws IOException, InterruptedException {
         try {
             Boolean result = null;
             ArrayList<TelegramRequest> requests = new ArrayList<>();
@@ -31,24 +32,18 @@ public class TelegramServiceImpl implements TelegramService {
                 }
                 result = new InstagramPhotoAndVideoDownloader().download(requests, chatId);
             }
-            try {
 
-                if (result.equals(Boolean.TRUE)) {
-                    LocalDateTime timeDone = LocalDateTime.now();
-                    sendMessageToBot.sendMessage("Скачано за " + difference(time, timeDone) + " секунды ⏳", chatId);
+            if (result.equals(Boolean.TRUE)) {
+                LocalDateTime timeDone = LocalDateTime.now();
+                sendMessageToBot.sendMessage("Видео обработано за " + difference(time, timeDone) + " секунды ⏳", chatId);
 
-                } else {
-                    sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Vozmojno zdes ?");
+            } else {
+                sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
             }
-
             new DeleteAllInFolder().deleteInFolder();
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println( e);
+            System.out.println(e);
         }
     }
 

@@ -13,12 +13,9 @@ public class DeleteAllInFolder {
                 for (File file : files) {
                     if (file.isFile()) {
                         file.delete();
-                        System.out.println("Удален файл: " + file.getName());
                     }
                 }
             }
-        } else {
-            System.out.println("Папка не существует или это не директория.");
         }
     }
 }

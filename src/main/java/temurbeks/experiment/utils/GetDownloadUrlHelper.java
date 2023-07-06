@@ -2,6 +2,7 @@ package temurbeks.experiment.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -17,6 +18,7 @@ import temurbeks.experiment.entity.Type;
 import temurbeks.experiment.exception.MyException;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,7 @@ public class GetDownloadUrlHelper {
     public String getUrl(String url, Type type, String chat) throws IOException, InterruptedException {
         if (type.equals(Type.REELS) || type.equals(Type.POST)){
             HttpClient httpClient = HttpClientBuilder.create().build();
-            HttpPost request = new HttpPost("https://igdownloader.app/api/ajaxSearch");
+            HttpPost request = new HttpPost("https://v3.saveinsta.app/api/ajaxSearch");
 
             // Создаем список пар "имя"-"значение" для формы данных
             List<NameValuePair> formParams = new ArrayList<>();
@@ -39,9 +41,15 @@ public class GetDownloadUrlHelper {
                 HttpResponse response = httpClient.execute(request);
                 HttpEntity entity1 = response.getEntity();
                 String json = EntityUtils.toString(entity1);
-                Gson gson = new Gson();
+                System.out.println("json response from Saveinsta \n->" + json);
                 JsonParser jsonParser = new JsonParser();
-                JsonElement rootElement = jsonParser.parse(json);
+                JsonElement rootElement = null;
+                try {
+                    rootElement = jsonParser.parse(json);
+                }
+                catch (Exception e){
+                    new SendMessageToBot().sendMessage("Проблема с Saveinsta ☹️, свяжитесь с @Mr_Temurbek", chat);
+                }
 
                 JsonObject jsonObject = rootElement.getAsJsonObject();
                 try {
@@ -57,8 +65,7 @@ public class GetDownloadUrlHelper {
                 e.printStackTrace();
                 return "Error occurred while fetching data from JSON";
             }catch (MyException e) {
-                SendMessageToBot sendMessageToBot = new SendMessageToBot();
-                sendMessageToBot.sendMessage(" ❌❌❌ Обработка не удалась ❌❌❌\n 🔒 Закрытый аккаунт 🔒", chat);
+                new SendMessageToBot().sendMessage(" ❌❌❌ Обработка не удалась ❌❌❌\n 🔒 Закрытый аккаунт 🔒", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }
 
@@ -77,13 +84,13 @@ public class GetDownloadUrlHelper {
                 }
                 HttpEntity entity1 = response.getEntity();
                 String json = EntityUtils.toString(entity1);
+                System.out.println("json response from Igram.World \n->" + json);
                 return json;
             } catch (IOException e) {
                 e.printStackTrace();
                 return "Error occurred while fetching data from JSON";
             }catch (MyException e){
-                SendMessageToBot sendMessageToBot = new SendMessageToBot();
-                sendMessageToBot.sendMessage("  ❌❌❌ Обработка не удалась ❌❌❌ \n 🔒 Видимо закрытый аккаунт 🔒 \n или \uD83E\uDEAB Сервер не работает \uD83E\uDEAB", chat);
+                new SendMessageToBot().sendMessage("  ❌❌❌ Обработка не удалась ❌❌❌ \n 🔒 Видимо закрытый аккаунт 🔒 \n или \uD83E\uDEAB Сервер не работает \uD83E\uDEAB", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }
 

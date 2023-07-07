@@ -24,54 +24,35 @@ import java.util.List;
 
 public class GetDownloadUrlHelper {
     public String getUrl(String url, Type type, String chat) throws IOException, InterruptedException {
-        if (type.equals(Type.REELS) || type.equals(Type.POST)){
-            HttpClient httpClient = HttpClientBuilder.create().build();
-            HttpPost request = new HttpPost("https://v3.saveinsta.app/api/ajaxSearch");
-
-            // Создаем список пар "имя"-"значение" для формы данных
-            List<NameValuePair> formParams = new ArrayList<>();
-            formParams.add(new BasicNameValuePair("q", url));
-            formParams.add(new BasicNameValuePair("t", "media"));
-
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        if (type.equals(Type.REELS) || type.equals(Type.POST)) {
+            String json = "";
             try {
-                // Создаем объект UrlEncodedFormEntity и устанавливаем его в качестве сущности запроса
-                HttpEntity entity = new UrlEncodedFormEntity(formParams);
-                request.setEntity(entity);
-
-                HttpResponse response = httpClient.execute(request);
-                HttpEntity entity1 = response.getEntity();
-                String json = EntityUtils.toString(entity1);
-                System.out.println("json response from Saveinsta \n->" + json);
+                json = new PythonRunner().runner(url);
                 JsonParser jsonParser = new JsonParser();
                 JsonElement rootElement = null;
                 try {
                     rootElement = jsonParser.parse(json);
-                }
-                catch (Exception e){
+                } catch (Exception e) {
+                    System.out.println("Error json ->" + json);
                     new SendMessageToBot().sendMessage("Проблема с Saveinsta ☹️, свяжитесь с @Mr_Temurbek", chat);
                 }
 
                 JsonObject jsonObject = rootElement.getAsJsonObject();
                 try {
                     String mess = jsonObject.get("mess").getAsString();
-                    if (mess.contains("Video is private")){
+                    if (mess.contains("Video is private")) {
                         throw new MyException();
                     }
-                }catch (NullPointerException ignored){
-
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
                 }
                 return json;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return "Error occurred while fetching data from JSON";
-            }catch (MyException e) {
+            } catch (MyException e) {
                 new SendMessageToBot().sendMessage(" ❌❌❌ Обработка не удалась ❌❌❌\n 🔒 Закрытый аккаунт 🔒", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }
-
-        }
-        else {
-            HttpClient httpClient = HttpClientBuilder.create().build();
+        } else {
             String fullUrl = "https://igram.world/api/ig/story" + "?" + "url" + "=" + url;
 
             HttpGet request = new HttpGet(fullUrl);
@@ -79,7 +60,7 @@ public class GetDownloadUrlHelper {
 
             try {
                 HttpResponse response = httpClient.execute(request);
-                if (response.getStatusLine().getStatusCode()==500){
+                if (response.getStatusLine().getStatusCode() == 500) {
                     throw new MyException();
                 }
                 HttpEntity entity1 = response.getEntity();
@@ -89,7 +70,7 @@ public class GetDownloadUrlHelper {
             } catch (IOException e) {
                 e.printStackTrace();
                 return "Error occurred while fetching data from JSON";
-            }catch (MyException e){
+            } catch (MyException e) {
                 new SendMessageToBot().sendMessage("  ❌❌❌ Обработка не удалась ❌❌❌ \n 🔒 Видимо закрытый аккаунт 🔒 \n или \uD83E\uDEAB Сервер не работает \uD83E\uDEAB", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }

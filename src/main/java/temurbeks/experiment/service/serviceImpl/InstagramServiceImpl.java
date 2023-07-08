@@ -6,10 +6,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.enterprise.event.Observes;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,7 +23,7 @@ import jakarta.inject.Inject;
 import temurbeks.experiment.utils.GetDownloadUrlHelper;
 import temurbeks.experiment.utils.SendMessageToBot;
 
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +36,28 @@ public class InstagramServiceImpl implements InstagramService {
     @Inject
     TelegramService telegramService;
 
+    private static final String FILE_PATH = "chat_id.txt";
+    public static List<String> chatIdList;
+
+    public void onStart(@Observes StartupEvent event) {
+        chatIdList = readStaticListFromFile();
+        // Делайте что-то с вашим статическим списком после чтения из файла
+    }
+
+    public void addToStaticList(String id) {
+        chatIdList.add(id);
+        saveStaticListToFile();
+    }
+
     @Override
     public String getLinkVideo(InstagramRequest data) throws IOException, InterruptedException {
+        if (!chatIdList.contains(data.getChat())) {
+            try {
+                addToStaticList(data.getChat());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
             sendMessageToBot.sendMessage("Скачивание началось ! ✔️ " +
@@ -65,6 +87,18 @@ public class InstagramServiceImpl implements InstagramService {
             throw new RuntimeException("ERROR TELEGRAM");
         }
         return "SUCCESS";
+    }
+
+    @Override
+    public Boolean sendToAll(StringEntity message) {
+        for (String chatID : chatIdList) {
+            try {
+                new SendMessageToBot().sendMessage(message.getMessage(), chatID);
+            } catch (IOException | InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static List<String> extractUrlsFromData(String data) {
@@ -99,20 +133,20 @@ public class InstagramServiceImpl implements InstagramService {
                 hrefUrl.add(hrefTag.attr("href"));
             }
         }
-            Elements imgTags = doc.select("img");
-            for (Element imgTag : imgTags) {
-                if (imgTag.attr("src").contains(".xyz")) {
-                    srcUrl.add(imgTag.attr("src"));
-                }
+        Elements imgTags = doc.select("img");
+        for (Element imgTag : imgTags) {
+            if (imgTag.attr("src").contains(".xyz")) {
+                srcUrl.add(imgTag.attr("src"));
             }
-            if (!hrefUrl.isEmpty()){
-                instaType = Type.REELS;
-                return hrefUrl;
-            }
+        }
+        if (!hrefUrl.isEmpty()) {
+            instaType = Type.REELS;
+            return hrefUrl;
+        }
         return srcUrl;
     }
 
-    public static List getDownloadUrlForStories(String data){
+    public static List getDownloadUrlForStories(String data) {
         Gson gson = new Gson();
         JsonParser jsonParser = new JsonParser();
         JsonElement rootElement = jsonParser.parse(data);
@@ -123,17 +157,16 @@ public class InstagramServiceImpl implements InstagramService {
             videoVersions = jsonObject.get("result")
                     .getAsJsonArray().get(0).getAsJsonObject()
                     .get("video_versions").getAsJsonArray();
-        }
-        catch (Exception ignored){
+        } catch (Exception ignored) {
 
         }
-        JsonArray candidates =jsonObject.get("result")
+        JsonArray candidates = jsonObject.get("result")
                 .getAsJsonArray().get(0).getAsJsonObject()
                 .get("image_versions2").getAsJsonObject()
                 .get("candidates").getAsJsonArray();
 
 
-        if (videoVersions == null ) {
+        if (videoVersions == null) {
             for (JsonElement element : candidates) {
                 JsonObject candidate = element.getAsJsonObject();
                 int width = candidate.get("width").getAsInt();
@@ -168,7 +201,36 @@ public class InstagramServiceImpl implements InstagramService {
             videoStory.setUrl_signature(urlSignature);
             return List.of(videoStory.getUrl());
         }
-        throw  new NoSuchElementException("Такое не возможно, или код не правильный");
+        throw new NoSuchElementException("Такое не возможно, или код не правильный");
+    }
+
+
+    private static List<String> readStaticListFromFile() {
+        List<String> list = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                list.add(line);
+            }
+        } catch (IOException e) {
+            // Обработка ошибки чтения файла
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    private static void saveStaticListToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            for (String id : chatIdList) {
+                writer.write(id);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            // Обработка ошибки записи в файл
+            e.printStackTrace();
+        }
     }
 
 

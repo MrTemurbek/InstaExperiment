@@ -44,8 +44,8 @@ public class GetDownloadUrlHelper {
                     if (mess.contains("Video is private")) {
                         throw new MyException();
                     }
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
+                } catch (NullPointerException ignored) {
+
                 }
                 return json;
             } catch (MyException e) {

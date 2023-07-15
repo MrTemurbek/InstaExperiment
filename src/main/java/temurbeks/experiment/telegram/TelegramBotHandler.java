@@ -4,7 +4,6 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import lombok.Data;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -15,11 +14,9 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.StringEntity;
 import temurbeks.experiment.service.InstagramService;
-
 import java.io.IOException;
 
 @ApplicationScoped
-@Data
 public class TelegramBotHandler extends TelegramLongPollingBot {
     private String user = "instagram_down_robot";
 
@@ -66,6 +63,14 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         return TOKEN;
     }
 
+
+    public void setUSERNAME(String USERNAME) {
+        this.USERNAME = USERNAME;
+    }
+
+    public void setTOKEN(String TOKEN) {
+        this.TOKEN = TOKEN;
+    }
 
     public void runBot(@Observes StartupEvent event) {
         try {

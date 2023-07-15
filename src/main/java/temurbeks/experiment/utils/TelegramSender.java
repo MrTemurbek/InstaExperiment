@@ -3,9 +3,13 @@ package temurbeks.experiment.utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import jakarta.inject.Inject;
 import okhttp3.*;
 import temurbeks.experiment.entity.FinalTGRequest;
 import temurbeks.experiment.entity.TelegramRequest;
+import temurbeks.experiment.service.InstagramService;
+import temurbeks.experiment.telegram.TelegramBotHandler;
+import temurbeks.experiment.telegram.TgLocal;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +17,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 
 public class TelegramSender {
-    private final static String BOT_TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
+
+    public final static String BOT_TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
 
     public Integer sendMedia(ArrayList<TelegramRequest> urls, String chat) throws IOException, InterruptedException {
         OkHttpClient client = new OkHttpClient.Builder()
@@ -74,26 +79,40 @@ public class TelegramSender {
             new SendMessageToBot().sendMessage("Не получилось скачать ☹️", chat);
             return false;
         }
-        OkHttpClient client = new OkHttpClient();
         File videoFile = new File(videoFilePath);
-
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("chat_id", chat)
-                .addFormDataPart("video", videoFile.getName(),
-                        RequestBody.create(MediaType.parse("video/mp4"), videoFile))
-                .build();
-
-        Request request = new Request.Builder()
-                .url("https://api.telegram.org/bot" + BOT_TOKEN + "/sendVideo")
-                .post(requestBody)
-                .build();
-
-
-        try (Response response = client.newCall(request).execute()) {
-            response.close();
-            return response.isSuccessful();
+        long fileSizeInBytes = videoFile.length();
+        double fileSizeInMB = (double) fileSizeInBytes / (1024 * 1024);
+        if (fileSizeInMB> 49.5d){
+            new SendMessageToBot().sendMessage("Размер файла оказался большим, отправка займёт время ( , но мы отправим \uD83D\uDE01 ", chat);
+            return new TgLocal().sendVideoLocal(videoFilePath, chat);
         }
+        else {
+            OkHttpClient client = new OkHttpClient();
+
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("chat_id", chat)
+                    .addFormDataPart("video", videoFile.getName(),
+                            RequestBody.create(MediaType.parse("video/mp4"), videoFile))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("https://api.telegram.org/bot" + BOT_TOKEN + "/sendVideo")
+                    .post(requestBody)
+                    .build();
+
+
+            try (Response response = client.newCall(request).execute()) {
+                response.close();
+                return response.isSuccessful();
+            }
+            catch (Exception e){
+                return false;
+            }
+        }
+
+
     }
 
 }

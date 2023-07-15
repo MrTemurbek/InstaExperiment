@@ -23,7 +23,7 @@ public class TelegramSender {
 
     public Integer sendMedia(ArrayList<TelegramRequest> urls, String chat) throws IOException, InterruptedException {
         OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(Duration.ofSeconds(90))
+                .readTimeout(Duration.ofSeconds(90))
                 .build();
         FinalTGRequest finalTGRequest = new FinalTGRequest(urls, chat);
 

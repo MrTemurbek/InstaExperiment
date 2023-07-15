@@ -1,24 +1,6 @@
 package temurbeks.experiment.utils;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
-import temurbeks.experiment.entity.Type;
-import temurbeks.experiment.exception.MyException;
-
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PythonRunner {
     public String runner(String instaUrl) {

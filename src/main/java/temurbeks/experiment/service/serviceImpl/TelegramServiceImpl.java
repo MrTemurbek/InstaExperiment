@@ -18,7 +18,6 @@ import java.util.List;
 public class TelegramServiceImpl implements TelegramService {
     @Override
     public void sendAllToBotFromUrl(List<String> urls, String mainUrl, LocalDateTime time, String chatId, Type type) throws IOException, InterruptedException {
-        SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
             Boolean result = null;
             ArrayList<TelegramRequest> requests = new ArrayList<>();
@@ -33,7 +32,7 @@ public class TelegramServiceImpl implements TelegramService {
                 }
                 result = new InstagramPhotoAndVideoDownloader().download(requests, chatId);
             }
-
+            SendMessageToBot sendMessageToBot = new SendMessageToBot();
             if (result){
                 if (type.equals(Type.POST)){
                     LocalDateTime timeDone = LocalDateTime.now();
@@ -46,11 +45,13 @@ public class TelegramServiceImpl implements TelegramService {
 
                 }
             } else {
-                sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
+                LocalDateTime timeDone = LocalDateTime.now();
+                sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek, обработано за :"+ difference(time, timeDone), chatId);
             }
             new DeleteAllInFolder().deleteInFolder();
         } catch (Exception e) {
-            sendMessageToBot.sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek", chatId);
+            LocalDateTime timeDone = LocalDateTime.now();
+            new SendMessageToBot().sendMessage("Не получилось скачать☹️, свяжитесь с @Mr_Temurbek, обработано за :"+ difference(time, timeDone), chatId);
             e.printStackTrace();
             System.out.println(e);
         }

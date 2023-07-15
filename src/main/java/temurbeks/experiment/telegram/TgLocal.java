@@ -11,7 +11,7 @@ public class TgLocal {
     public boolean sendVideoLocal(String videoFilePath, String chat){
         try {
             OkHttpClient client = new OkHttpClient.Builder()
-                    .callTimeout(Duration.ofSeconds(75))
+                    .connectTimeout(Duration.ofSeconds(75))
                     .build();
             File videoFile = new File(videoFilePath);
             RequestBody requestBody = new MultipartBody.Builder()

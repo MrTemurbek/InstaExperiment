@@ -28,7 +28,5 @@ public class SendMessageToBot {
                 .build();
         client
                 .send(request, HttpResponse.BodyHandlers.ofString());
-
-        System.out.println("SUCCESS!");
     }
 }

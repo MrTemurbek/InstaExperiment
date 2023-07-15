@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class TelegramSender {
 
@@ -30,7 +31,6 @@ public class TelegramSender {
         // Преобразование объекта в JSON-строку
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String json = gson.toJson(finalTGRequest);
-        System.out.println("json request " + json);
         // Установка типа контента как application/json
         MediaType mediaType = MediaType.parse("application/json");
         // Создание экземпляра RequestBody с JSON-строкой
@@ -57,21 +57,24 @@ public class TelegramSender {
                 return response.code();
             }
         } catch (Exception e) {
-            System.out.println("resp :" + response);
+            response.body().close();
+            response.close();
+            client.dispatcher().cancelAll();
+            client.connectionPool().evictAll();
             if (response.code()==400){
                 if (sendBigVideo(urls.get(0).getMedia(),chat)){
                     return 200;
                 }
             }
-            response.body().close();
-            System.out.println(e);
+            e.printStackTrace();
             return response.code();
         }
     }
 
     public static Boolean sendBigVideo(String url, String chat) throws IOException, InterruptedException {
         new SendMessageToBot().sendMessage("Походу файл большой, попытаемся скачать и отправить вам, это займёт время, пожалуйста ждите 🤞", chat);
-        String videoFilePath = "video/sample.mp4";
+        String uuid =  UUID.randomUUID().toString();
+        String videoFilePath = "video/"+uuid+".mp4";
         if (new DownloaderVideo().downloadVideo(url, videoFilePath)){
             new SendMessageToBot().sendMessage("Скачали ! Отправляем 👌", chat);
         }

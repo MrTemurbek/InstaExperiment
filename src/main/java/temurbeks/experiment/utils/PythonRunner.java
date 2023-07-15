@@ -42,7 +42,6 @@ public class PythonRunner {
 
             // Дожидаемся окончания выполнения процесса
             int exitCode = process.waitFor();
-            System.out.println("Exit Code: " + exitCode);
 
             // Используем полученный вывод в Java
             response = output.toString();

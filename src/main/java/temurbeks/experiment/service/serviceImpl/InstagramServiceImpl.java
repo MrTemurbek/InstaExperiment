@@ -81,7 +81,7 @@ public class InstagramServiceImpl implements InstagramService {
             responseUrl = extractUrlsFromData(temporaryResponse.getData());
         }
         try {
-            telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat(), instaType, sendMessageToBot);
+            telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat(), instaType);
         } catch (Exception e) {
             System.out.println(e);
             throw new RuntimeException("ERROR TELEGRAM");

@@ -17,7 +17,8 @@ import java.util.List;
 @ApplicationScoped
 public class TelegramServiceImpl implements TelegramService {
     @Override
-    public void sendAllToBotFromUrl(List<String> urls, String mainUrl, LocalDateTime time, String chatId, Type type, SendMessageToBot sendMessageToBot) throws IOException, InterruptedException {
+    public void sendAllToBotFromUrl(List<String> urls, String mainUrl, LocalDateTime time, String chatId, Type type) throws IOException, InterruptedException {
+        SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
             Boolean result = null;
             ArrayList<TelegramRequest> requests = new ArrayList<>();

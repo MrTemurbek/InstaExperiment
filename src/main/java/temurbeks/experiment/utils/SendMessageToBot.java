@@ -13,7 +13,7 @@ public class SendMessageToBot {
 
     public void sendMessage(String text, String chat) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(15))
+                .connectTimeout(Duration.ofSeconds(120))
                 .version(HttpClient.Version.HTTP_2)
                 .build();
         UriBuilder builder = UriBuilder

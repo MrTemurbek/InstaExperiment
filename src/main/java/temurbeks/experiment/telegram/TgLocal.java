@@ -3,13 +3,15 @@ package temurbeks.experiment.telegram;
 import okhttp3.*;
 
 import java.io.File;
+import java.time.Duration;
 
 import static temurbeks.experiment.utils.TelegramSender.BOT_TOKEN;
 
 public class TgLocal {
     public boolean sendVideoLocal(String videoFilePath, String chat){
         try {
-            OkHttpClient client = new OkHttpClient().newBuilder()
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .callTimeout(Duration.ofSeconds(75))
                     .build();
             File videoFile = new File(videoFilePath);
             RequestBody requestBody = new MultipartBody.Builder()

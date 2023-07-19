@@ -1,6 +1,5 @@
 package temurbeks.experiment.service.serviceImpl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -83,7 +82,7 @@ public class InstagramServiceImpl implements InstagramService {
         try {
             telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat(), instaType);
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
             throw new RuntimeException("ERROR TELEGRAM");
         }
         return "SUCCESS";
@@ -120,7 +119,7 @@ public class InstagramServiceImpl implements InstagramService {
         }
     }
 
-    public static List imageSrcOrHrefExtractor(String html) {
+    public static List<String> imageSrcOrHrefExtractor(String html) {
         Document doc = Jsoup.parse(html);
         List<String> srcUrl = new ArrayList<>();
         List<String> hrefUrl = new ArrayList<>();
@@ -146,7 +145,7 @@ public class InstagramServiceImpl implements InstagramService {
         return srcUrl;
     }
 
-    public static List getDownloadUrlForStories(String data) {
+    public static List<String> getDownloadUrlForStories(String data) {
         Gson gson = new Gson();
         JsonParser jsonParser = new JsonParser();
         JsonElement rootElement = jsonParser.parse(data);

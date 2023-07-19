@@ -18,7 +18,6 @@ import java.io.IOException;
 
 @ApplicationScoped
 public class TelegramBotHandler extends TelegramLongPollingBot {
-    private String user = "instagram_down_robot";
 
     public TelegramBotHandler(InstagramService instagram) {
         this.instagram = instagram;

@@ -2,13 +2,9 @@ package temurbeks.experiment.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import jakarta.inject.Inject;
 import okhttp3.*;
 import temurbeks.experiment.entity.FinalTGRequest;
 import temurbeks.experiment.entity.TelegramRequest;
-import temurbeks.experiment.service.InstagramService;
-import temurbeks.experiment.telegram.TelegramBotHandler;
 import temurbeks.experiment.telegram.TgLocal;
 
 import java.io.File;
@@ -43,21 +39,18 @@ public class TelegramSender {
         Response response = null;
         try {
             response = client.newCall(request).execute();
-            response.body().close();
             response.close();
             if (response.isSuccessful()) {
                 System.out.println("Operation completed successfully!");
                 client.dispatcher().cancelAll();
                 client.connectionPool().evictAll();
-                return response.code();
 
             } else {
                 System.out.println("Failed to send media. Response: " + response.body().string());
-                response.body().close();
-                return response.code();
+                response.close();
             }
+            return response.code();
         } catch (Exception e) {
-            response.body().close();
             response.close();
             client.dispatcher().cancelAll();
             client.connectionPool().evictAll();

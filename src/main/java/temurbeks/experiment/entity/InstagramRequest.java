@@ -15,13 +15,6 @@ public class InstagramRequest {
         return chat;
     }
 
-    public void setChat(String chat) {
-        this.chat = chat;
-    }
-
-    public InstagramRequest() {
-    }
-
     public String getUrl() {
         return url;
     }

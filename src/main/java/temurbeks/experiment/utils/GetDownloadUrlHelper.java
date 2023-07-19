@@ -1,32 +1,23 @@
 package temurbeks.experiment.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import temurbeks.experiment.entity.TemporaryResponse;
 import temurbeks.experiment.entity.Type;
 import temurbeks.experiment.exception.MyException;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class GetDownloadUrlHelper {
     public String getUrl(String url, Type type, String chat) throws IOException, InterruptedException {
         HttpClient httpClient = HttpClientBuilder.create().build();
         if (type.equals(Type.REELS) || type.equals(Type.POST)) {
-            String json = "";
+            String json;
             try {
                 json = new PythonRunner().runner(url);
                 JsonParser jsonParser = new JsonParser();

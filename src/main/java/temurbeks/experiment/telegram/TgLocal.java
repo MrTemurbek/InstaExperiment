@@ -4,7 +4,6 @@ import okhttp3.*;
 
 import java.io.File;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static temurbeks.experiment.utils.TelegramSender.BOT_TOKEN;
 

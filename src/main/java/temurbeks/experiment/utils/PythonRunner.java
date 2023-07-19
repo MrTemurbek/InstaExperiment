@@ -23,7 +23,7 @@ public class PythonRunner {
             }
 
             // Дожидаемся окончания выполнения процесса
-            int exitCode = process.waitFor();
+            process.waitFor();
 
             // Используем полученный вывод в Java
             response = output.toString();

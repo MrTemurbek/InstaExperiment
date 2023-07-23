@@ -17,6 +17,8 @@ public class TgLocal {
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("chat_id", chat)
+                    .addFormDataPart("width", "1080")
+                    .addFormDataPart("height", "1920")
                     .addFormDataPart("video", videoFile.getName() ,
                             RequestBody.create(MediaType.parse("video/mp4"), videoFile))
                     .build();

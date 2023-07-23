@@ -21,6 +21,7 @@ import temurbeks.experiment.service.TelegramService;
 import jakarta.inject.Inject;
 import temurbeks.experiment.utils.GetDownloadUrlHelper;
 import temurbeks.experiment.utils.SendMessageToBot;
+import temurbeks.experiment.utils.TelegramSender;
 
 import java.io.*;
 import java.time.LocalDateTime;
@@ -40,7 +41,6 @@ public class InstagramServiceImpl implements InstagramService {
 
     public void onStart(@Observes StartupEvent event) {
         chatIdList = readStaticListFromFile();
-        // Делайте что-то с вашим статическим списком после чтения из файла
     }
 
     public void addToStaticList(String id) {
@@ -74,10 +74,10 @@ public class InstagramServiceImpl implements InstagramService {
         List<String> responseUrl;
         String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType, data.getChat());
         if (instaType.equals(Type.STORIES)) {
-            responseUrl = extractUrlsFromData(json);
+            responseUrl = extractUrlsFromData(json, data.getChat());
         } else {
             TemporaryResponse temporaryResponse = new ObjectMapper().readValue(json, TemporaryResponse.class);
-            responseUrl = extractUrlsFromData(temporaryResponse.getData());
+            responseUrl = extractUrlsFromData(temporaryResponse.getData(), data.getChat());
         }
         try {
             telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat(), instaType);
@@ -100,9 +100,9 @@ public class InstagramServiceImpl implements InstagramService {
         return true;
     }
 
-    private static List<String> extractUrlsFromData(String data) {
+    private static List<String> extractUrlsFromData(String data, String chatId) {
         if (instaType.equals(Type.POST) || instaType.equals(Type.REELS)) {
-            return imageSrcOrHrefExtractor(data);
+            return imageSrcOrHrefExtractor(data, chatId);
         } else {
             return getDownloadUrlForStories(data);
         }
@@ -119,10 +119,11 @@ public class InstagramServiceImpl implements InstagramService {
         }
     }
 
-    public static List<String> imageSrcOrHrefExtractor(String html) {
+    public static List<String> imageSrcOrHrefExtractor(String html, String chatId) {
         Document doc = Jsoup.parse(html);
         List<String> srcUrl = new ArrayList<>();
         List<String> hrefUrl = new ArrayList<>();
+        List<String> extractUrl = new ArrayList<>();
         // Извлечение значений атрибута src из тегов img и href
 
         Elements hrefTags = doc.select("a");
@@ -132,6 +133,14 @@ public class InstagramServiceImpl implements InstagramService {
                 hrefUrl.add(hrefTag.attr("href"));
             }
         }
+        Elements divElements = doc.select("div").attr("src", "download-items__thumb");
+        for (Element divElement : divElements) {
+            String element = divElement.select("img").attr("src");
+            if (element.contains(".xyz") && element.contains("jpg%3fstp%3ddst-jpg")) {
+                extractUrl.add(element);
+            }
+        }
+
         Elements imgTags = doc.select("img");
         for (Element imgTag : imgTags) {
             if (imgTag.attr("src").contains(".xyz")) {
@@ -142,6 +151,21 @@ public class InstagramServiceImpl implements InstagramService {
             }
         }
         if (!hrefUrl.isEmpty()) {
+            if (!srcUrl.isEmpty() && !extractUrl.isEmpty()) {
+                ArrayList<TelegramRequest> requests = new ArrayList<>();
+
+                for (String postUrls : srcUrl) {
+                    if (!extractUrl.contains(postUrls)) {
+                        requests.add(new TelegramRequest("photo", postUrls));
+                    }
+                }
+                try {
+                    new TelegramSender().sendMedia(requests, chatId).equals(200);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.err.println("Не смогли отправить фотки");
+                }
+            }
             instaType = Type.REELS;
             return hrefUrl;
         }

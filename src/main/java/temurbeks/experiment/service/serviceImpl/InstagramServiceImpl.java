@@ -137,6 +137,9 @@ public class InstagramServiceImpl implements InstagramService {
             if (imgTag.attr("src").contains(".xyz")) {
                 srcUrl.add(imgTag.attr("src"));
             }
+            if (imgTag.attr("data-src").contains(".xyz")) {
+                srcUrl.add(imgTag.attr("data-src"));
+            }
         }
         if (!hrefUrl.isEmpty()) {
             instaType = Type.REELS;

@@ -1,5 +1,11 @@
 package temurbeks.experiment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@Data
 public class TemporaryResponse {
     private String status;
     private String  p;
@@ -18,4 +24,6 @@ public class TemporaryResponse {
     public void setData(String data) {
         this.data = data;
     }
+
+
 }

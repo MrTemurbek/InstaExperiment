@@ -1,7 +1,10 @@
 package temurbeks.experiment.entity;
 
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class InstagramRequest {
     private String url;
     private String chat;

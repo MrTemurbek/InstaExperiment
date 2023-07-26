@@ -48,7 +48,7 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         }
         else if (text.contains("/start")){
             sender(message, "Привет, этот бот поможет скачать видео с Инстаграма \n" +
-                    "Hello, this bot can help you with downloading Instagram video \n \n+" +
+                    "Hello, this bot can help you with downloading Instagram video \n \n" +
                     "Author/Автор: @Mr_Temurbek");
         }
         else if (text.startsWith("TOALL")){

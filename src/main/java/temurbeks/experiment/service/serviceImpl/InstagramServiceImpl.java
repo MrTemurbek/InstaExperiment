@@ -28,8 +28,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 
 
 @ApplicationScoped
@@ -52,14 +51,12 @@ public class InstagramServiceImpl implements InstagramService {
 
     @Override
     public String getLinkVideo(InstagramRequest data, TelegramUser tgUser) throws IOException, InterruptedException {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(() -> {
-            for (TelegramUser user : chatIdList) {
-                if (!user.getId().equals(tgUser.getId())) {
-                    addChanelToStaticList(tgUser);
-                }
+        for (TelegramUser user : chatIdList) {
+            if (!user.getId().equals(tgUser.getId())) {
+                System.out.println("New Client saved ! " + tgUser);
+                addChanelToStaticList(tgUser);
             }
-        });
+        }
 
         SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
@@ -89,7 +86,6 @@ public class InstagramServiceImpl implements InstagramService {
             e.printStackTrace();
             throw new RuntimeException("ERROR TELEGRAM");
         }
-        executorService.shutdown();
         return "SUCCESS";
     }
 
@@ -164,11 +160,13 @@ public class InstagramServiceImpl implements InstagramService {
                         requests.add(new TelegramRequest("photo", postUrls));
                     }
                 }
-                try {
-                    new TelegramSender().sendMedia(requests, chatId).equals(200);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.err.println("Не смогли отправить фотки");
+                if (!requests.isEmpty()){
+                    try {
+                        new TelegramSender().sendMedia(requests, chatId).equals(200);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.err.println("Не смогли отправить фотки");
+                    }
                 }
             }
             instaType = Type.REELS;

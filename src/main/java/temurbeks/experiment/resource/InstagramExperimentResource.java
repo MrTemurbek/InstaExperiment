@@ -2,6 +2,7 @@ package temurbeks.experiment.resource;
 
 import jakarta.enterprise.context.RequestScoped;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import temurbeks.experiment.entity.DownloadTask;
 import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.StringEntity;
 import temurbeks.experiment.service.InstagramService;
@@ -11,6 +12,8 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.core.MediaType;
 
 import java.io.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 @Path("/api")
@@ -24,12 +27,24 @@ public class InstagramExperimentResource {
 
 
 
+
     @POST
     @Path("/download")
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_JSON)
-    public String download(@RequestBody InstagramRequest request) throws IOException, InterruptedException {
-        instagram.getLinkVideo(request);
+    public String download(@RequestBody InstagramRequest request) {
+        // Создаем ExecutorService с одним потоком для выполнения задачи
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        // Создаем задачу для скачивания
+        DownloadTask downloadTask = new DownloadTask(instagram, request);
+
+        // Запускаем задачу в фоновом режиме
+        executorService.execute(downloadTask);
+
+        // Завершаем работу ExecutorService после выполнения задачи
+        executorService.shutdown();
+
         return "Success";
     }
 

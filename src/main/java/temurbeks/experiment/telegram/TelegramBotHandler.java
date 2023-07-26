@@ -13,6 +13,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.StringEntity;
+import temurbeks.experiment.entity.TelegramUser;
 import temurbeks.experiment.service.InstagramService;
 import java.io.IOException;
 
@@ -36,9 +37,11 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         Message message = update.getMessage();
         Long userId = message.getChatId();
         String text  = message.getText();
+        String name = message.getChat().getFirstName()+" "+message.getChat().getLastName();
+        TelegramUser tgUser = new TelegramUser(userId.toString(), name, message.getChat().getUserName());
         if (text.contains("instagram.com/")) {
             try {
-                instagram.getLinkVideo(new InstagramRequest(text, userId.toString()));
+                instagram.getLinkVideo(new InstagramRequest(text, userId.toString()), tgUser);
             } catch (IOException | InterruptedException e ) {
                 sender(message, "☹️ Обработка не удалась ☹️, свяжитесь с @Mr_Temurbek");
             }

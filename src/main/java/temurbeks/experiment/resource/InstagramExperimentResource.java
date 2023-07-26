@@ -2,7 +2,7 @@ package temurbeks.experiment.resource;
 
 import jakarta.enterprise.context.RequestScoped;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
-import temurbeks.experiment.entity.DownloadTask;
+import temurbeks.experiment.utils.DownloadTask;
 import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.StringEntity;
 import temurbeks.experiment.service.InstagramService;
@@ -11,7 +11,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.core.MediaType;
 
-import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

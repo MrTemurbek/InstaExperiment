@@ -1,5 +1,7 @@
-package temurbeks.experiment.entity;
+package temurbeks.experiment.utils;
 
+import temurbeks.experiment.entity.InstagramRequest;
+import temurbeks.experiment.entity.TelegramUser;
 import temurbeks.experiment.service.InstagramService;
 
 import java.io.IOException;
@@ -16,7 +18,8 @@ public class DownloadTask implements Runnable {
     @Override
     public void run() {
         try {
-            instagram.getLinkVideo(request);
+            TelegramUser telegramUser = new TelegramUser(request.getChat(), "CHANNEL", "CHANNEL");
+            instagram.getLinkVideo(request, telegramUser);
         } catch (IOException | InterruptedException e) {
             // Обработка ошибок
             e.printStackTrace();

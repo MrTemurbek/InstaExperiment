@@ -28,6 +28,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 @ApplicationScoped
@@ -37,26 +39,28 @@ public class InstagramServiceImpl implements InstagramService {
     TelegramService telegramService;
 
     private static final String FILE_PATH = "chat_id.txt";
-    public static List<String> chatIdList;
+    public static List<TelegramUser> chatIdList;
 
     public void onStart(@Observes StartupEvent event) {
         chatIdList = readStaticListFromFile();
     }
 
-    public void addToStaticList(String id) {
-        chatIdList.add(id);
-        saveStaticListToFile();
+    public void addChanelToStaticList(TelegramUser tgUser) {
+        chatIdList.add(tgUser);
+        saveStaticListToFile(List.of(tgUser));
     }
 
     @Override
-    public String getLinkVideo(InstagramRequest data) throws IOException, InterruptedException {
-        if (!chatIdList.contains(data.getChat())) {
-            try {
-                addToStaticList(data.getChat());
-            } catch (Exception e) {
-                e.printStackTrace();
+    public String getLinkVideo(InstagramRequest data, TelegramUser tgUser) throws IOException, InterruptedException {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(() -> {
+            for (TelegramUser user : chatIdList) {
+                if (!user.getId().equals(tgUser.getId())) {
+                    addChanelToStaticList(tgUser);
+                }
             }
-        }
+        });
+
         SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
             sendMessageToBot.sendMessage("Скачивание началось ! ✔️ " +
@@ -85,14 +89,15 @@ public class InstagramServiceImpl implements InstagramService {
             e.printStackTrace();
             throw new RuntimeException("ERROR TELEGRAM");
         }
+        executorService.shutdown();
         return "SUCCESS";
     }
 
     @Override
     public Boolean sendToAll(StringEntity message) {
-        for (String chatID : chatIdList) {
+        for (TelegramUser user : chatIdList) {
             try {
-                new SendMessageToBot().sendMessage(message.getMessage(), chatID);
+                new SendMessageToBot().sendMessage(message.getMessage(), user.getId());
             } catch (IOException | InterruptedException e) {
                 return false;
             }
@@ -231,34 +236,40 @@ public class InstagramServiceImpl implements InstagramService {
     }
 
 
-    private static List<String> readStaticListFromFile() {
-        List<String> list = new ArrayList<>();
+    private static List<TelegramUser> readStaticListFromFile() {
+        List<TelegramUser> userList = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                list.add(line);
+            String id, name, username;
+            while ((id = reader.readLine()) != null && (name = reader.readLine()) != null && (username = reader.readLine()) != null) {
+                TelegramUser user = new TelegramUser();
+                user.setId(id);
+                user.setName(name);
+                user.setUsername(username);
+                userList.add(user);
             }
         } catch (IOException e) {
             // Обработка ошибки чтения файла
             e.printStackTrace();
         }
 
-        return list;
+        return userList;
     }
 
-    private static void saveStaticListToFile() {
+    private static void saveStaticListToFile(List<TelegramUser> userList) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
-            for (String id : chatIdList) {
-                writer.write(id);
+            for (TelegramUser user : userList) {
+                String line = user.getId() + " - " + user.getName() + " - " + user.getUsername();
+                writer.write(line);
+                writer.newLine();
                 writer.newLine();
             }
         } catch (IOException e) {
             // Обработка ошибки записи в файл
             e.printStackTrace();
         }
-    }
 
 
+}
 }
 

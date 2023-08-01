@@ -9,4 +9,5 @@ import java.io.IOException;
 public interface InstagramService {
     String getLinkVideo(InstagramRequest request, TelegramUser tgUser) throws IOException, InterruptedException;
     Boolean sendToAll(StringEntity message);
+    Boolean getAll();
 }

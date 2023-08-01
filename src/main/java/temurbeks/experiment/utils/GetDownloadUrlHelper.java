@@ -20,6 +20,14 @@ public class GetDownloadUrlHelper {
             String json;
             try {
                 json = new PythonRunner().runner(url);
+                try {
+                    Integer.parseInt(json);
+                    return json;
+                }
+                catch (Exception ignored){
+
+                }
+                System.out.println("JSON py-> "+ json);
                 JsonParser jsonParser = new JsonParser();
                 JsonElement rootElement = null;
                 try {

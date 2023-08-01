@@ -59,4 +59,15 @@ public class InstagramExperimentResource {
         return "Failed";
     }
 
+    @GET
+    @Path("/getAll")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String getAll(){
+        if (instagram.getAll()){
+            return "Success";
+        }
+        return "Failed";
+    }
+
 }

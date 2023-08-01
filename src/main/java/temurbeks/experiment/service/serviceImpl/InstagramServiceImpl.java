@@ -25,10 +25,7 @@ import temurbeks.experiment.utils.TelegramSender;
 
 import java.io.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-
+import java.util.*;
 
 
 @ApplicationScoped
@@ -36,28 +33,29 @@ public class InstagramServiceImpl implements InstagramService {
     static Type instaType;
     @Inject
     TelegramService telegramService;
+    List<String> userIds = new ArrayList<>();
 
-    private static final String FILE_PATH = "chat_id.txt";
+    private static final String FILE_PATH = "telegramUsers.txt";
     public static List<TelegramUser> chatIdList;
 
     public void onStart(@Observes StartupEvent event) {
         chatIdList = readStaticListFromFile();
+        for (TelegramUser user : chatIdList) {
+            userIds.add(user.getId());
+        }
     }
 
     public void addChanelToStaticList(TelegramUser tgUser) {
         chatIdList.add(tgUser);
-        saveStaticListToFile(List.of(tgUser));
+        userIds.add(tgUser.getId());
+        saveStaticListToFile(chatIdList);
     }
 
     @Override
     public String getLinkVideo(InstagramRequest data, TelegramUser tgUser) throws IOException, InterruptedException {
-        for (TelegramUser user : chatIdList) {
-            if (!user.getId().equals(tgUser.getId())) {
-                System.out.println("New Client saved ! " + tgUser);
-                addChanelToStaticList(tgUser);
-            }
+        if (!userIds.contains(tgUser.getId())) {
+            addChanelToStaticList(tgUser);
         }
-
         SendMessageToBot sendMessageToBot = new SendMessageToBot();
         try {
             sendMessageToBot.sendMessage("Скачивание началось ! ✔️ " +
@@ -74,6 +72,14 @@ public class InstagramServiceImpl implements InstagramService {
         }
         List<String> responseUrl;
         String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType, data.getChat());
+        try {
+            Integer.parseInt(json);
+            sendMessageToBot.sendMessage("Пожайлуста повторите позже, после "+json+" секунд", data.getChat());
+            return "SUCCESS";
+        }
+        catch (Exception ignored){
+
+        }
         if (instaType.equals(Type.STORIES)) {
             responseUrl = extractUrlsFromData(json, data.getChat());
         } else {
@@ -100,6 +106,19 @@ public class InstagramServiceImpl implements InstagramService {
         }
         return true;
     }
+
+    @Override
+    public Boolean getAll(){
+        for (TelegramUser user : chatIdList) {
+            String line = user.getId() + " - " + user.getName() + " - " + user.getUsername();
+            try {
+                new SendMessageToBot().sendMessage(line, user.getId());
+            } catch (IOException | InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
+    };
 
     private static List<String> extractUrlsFromData(String data, String chatId) {
         if (instaType.equals(Type.POST) || instaType.equals(Type.REELS)) {
@@ -238,13 +257,19 @@ public class InstagramServiceImpl implements InstagramService {
         List<TelegramUser> userList = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
-            String id, name, username;
-            while ((id = reader.readLine()) != null && (name = reader.readLine()) != null && (username = reader.readLine()) != null) {
-                TelegramUser user = new TelegramUser();
-                user.setId(id);
-                user.setName(name);
-                user.setUsername(username);
-                userList.add(user);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(" - ");
+                if (parts.length == 3) {
+                    TelegramUser user = new TelegramUser();
+                    user.setId(parts[0]);
+                    user.setName(parts[1]);
+                    user.setUsername(parts[2]);
+                    userList.add(user);
+                } else {
+                    // Handle invalid format in the file
+                    System.err.println("Invalid line format: " + line);
+                }
             }
         } catch (IOException e) {
             // Обработка ошибки чтения файла
@@ -260,14 +285,11 @@ public class InstagramServiceImpl implements InstagramService {
                 String line = user.getId() + " - " + user.getName() + " - " + user.getUsername();
                 writer.write(line);
                 writer.newLine();
-                writer.newLine();
             }
         } catch (IOException e) {
             // Обработка ошибки записи в файл
             e.printStackTrace();
         }
-
-
 }
 }
 

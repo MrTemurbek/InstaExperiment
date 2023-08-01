@@ -11,6 +11,4 @@ public class TelegramUser {
     private String id;
     private String name;
     private String username;
-
-    // Конструктор, геттеры, сеттеры (можно сгенерировать автоматически или написать вручную)
 }

@@ -15,7 +15,12 @@ import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.StringEntity;
 import temurbeks.experiment.entity.TelegramUser;
 import temurbeks.experiment.service.InstagramService;
+
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @ApplicationScoped
 public class TelegramBotHandler extends TelegramLongPollingBot {
@@ -25,37 +30,66 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
     }
 
     private String USERNAME = "instagram_down_robot";
-    private  String TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
+    private String TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
 
     @Inject
     InstagramService instagram;
-
+    private final Map<Long, Long> lastProcessedTimestamps = new HashMap<>();
 
     @Override
     public void onUpdateReceived(Update update) {
         System.out.println("Starting Bot!");
         Message message = update.getMessage();
         Long userId = message.getChatId();
-        String text  = message.getText();
-        String name = message.getChat().getFirstName()+" "+message.getChat().getLastName();
-        TelegramUser tgUser = new TelegramUser(userId.toString(), name, message.getChat().getUserName());
-        if (text.contains("instagram.com/")) {
-            try {
-                instagram.getLinkVideo(new InstagramRequest(text, userId.toString()), tgUser);
-            } catch (IOException | InterruptedException e ) {
-                sender(message, "☹️ Обработка не удалась ☹️, свяжитесь с @Mr_Temurbek");
-            }
+        String text = message.getText();
+        System.out.println("TELEGRAM : \n" + message.getChat().toString());
+        String name;
+        if (message.getChat().getLastName().equals("null")) {
+            name = message.getChat().getFirstName();
+        } else {
+            name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
         }
-        else if (text.contains("/start")){
+        TelegramUser tgUser = new TelegramUser(userId.toString(), name, message.getChat().getUserName());
+        long currentTime = System.currentTimeMillis();
+
+        if (text.contains("instagram.com/")) {
+            // Check if the chatId was processed before and calculate the time difference
+            long lastProcessedTimestamp = lastProcessedTimestamps.getOrDefault(userId, 0L);
+            long timeDifference = currentTime - lastProcessedTimestamp;
+
+            // Update the last processed timestamp for this chatId
+            lastProcessedTimestamps.put(userId, System.currentTimeMillis());
+
+            // Process the request with a new thread
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            String finalText = text;
+            executorService.execute(() -> {
+                try {
+                    instagram.getLinkVideo(new InstagramRequest(finalText, userId.toString()), tgUser);
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            executorService.shutdown();
+
+            // If there is a time difference, wait before processing other requests
+            if (timeDifference > 0) {
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else if (text.contains("/start")) {
             sender(message, "Привет, этот бот поможет скачать видео с Инстаграма \n" +
                     "Hello, this bot can help you with downloading Instagram video \n \n" +
                     "Author/Автор: @Mr_Temurbek");
-        }
-        else if (text.startsWith("TOALL")){
-            text = text.substring(5);
+        } else if (text.startsWith("TO_ALL")) {
+            text = text.substring(6);
             instagram.sendToAll(new StringEntity(text));
-        }
-        else {
+        }else if (text.startsWith("GET_ALL")) {
+            instagram.getAll();
+        } else {
             sender(message, "Не правильный запрос на бот, \n отправьте ссылку на бот!");
         }
     }

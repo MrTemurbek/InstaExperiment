@@ -27,6 +27,7 @@ public class PythonRunner {
 
             // Используем полученный вывод в Java
             response = output.toString();
+            System.out.println("RESPONSE py-> "+response);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

@@ -49,7 +49,13 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         } else {
             name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
         }
-        TelegramUser tgUser = new TelegramUser(userId.toString(), name, message.getChat().getUserName());
+        String username;
+        if (StringUtils.isEmpty(message.getChat().getUserName())) {
+            username = "NULL";
+        } else {
+            username = message.getChat().getUserName();
+        }
+        TelegramUser tgUser = new TelegramUser(userId.toString(), name, username);
         long currentTime = System.currentTimeMillis();
 
         if (text.contains("instagram.com/")) {
@@ -87,7 +93,7 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         } else if (text.startsWith("TO_ALL")) {
             text = text.substring(6);
             instagram.sendToAll(new StringEntity(text), tgUser);
-        }else if (text.startsWith("GET_ALL")) {
+        } else if (text.startsWith("GET_ALL")) {
             instagram.getAll(tgUser);
         } else {
             sender(message, "Не правильный запрос на бот, \n отправьте ссылку на бот!");

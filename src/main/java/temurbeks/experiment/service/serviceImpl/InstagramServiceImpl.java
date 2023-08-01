@@ -74,10 +74,9 @@ public class InstagramServiceImpl implements InstagramService {
         String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType, data.getChat());
         try {
             Integer.parseInt(json);
-            sendMessageToBot.sendMessage("Пожайлуста повторите позже, после "+json+" секунд", data.getChat());
+            sendMessageToBot.sendMessage("Пожайлуста повторите позже, после " + json + " секунд", data.getChat());
             return "SUCCESS";
-        }
-        catch (Exception ignored){
+        } catch (Exception ignored) {
 
         }
         if (instaType.equals(Type.STORIES)) {
@@ -96,7 +95,10 @@ public class InstagramServiceImpl implements InstagramService {
     }
 
     @Override
-    public Boolean sendToAll(StringEntity message) {
+    public Boolean sendToAll(StringEntity message, TelegramUser tgUser) {
+        if (!userIds.contains(tgUser.getId())) {
+            addChanelToStaticList(tgUser);
+        }
         for (TelegramUser user : chatIdList) {
             try {
                 new SendMessageToBot().sendMessage(message.getMessage(), user.getId());
@@ -108,17 +110,24 @@ public class InstagramServiceImpl implements InstagramService {
     }
 
     @Override
-    public Boolean getAll(){
-        for (TelegramUser user : chatIdList) {
-            String line = user.getId() + " - " + user.getName() + " - " + user.getUsername();
-            try {
-                new SendMessageToBot().sendMessage(line, user.getId());
-            } catch (IOException | InterruptedException e) {
-                return false;
-            }
+    public Boolean getAll(TelegramUser tgUser) {
+        if (!userIds.contains(tgUser.getId())) {
+            addChanelToStaticList(tgUser);
         }
+        String line = "";
+        for (TelegramUser user : chatIdList) {
+            line += user.getId() + " - " + user.getName() + " - @" + user.getUsername() + "\n";
+        }
+        try {
+            new SendMessageToBot().sendMessage(line, tgUser.getId());
+        } catch (IOException | InterruptedException e) {
+            return false;
+        }
+
         return true;
-    };
+    }
+
+    ;
 
     private static List<String> extractUrlsFromData(String data, String chatId) {
         if (instaType.equals(Type.POST) || instaType.equals(Type.REELS)) {
@@ -179,7 +188,7 @@ public class InstagramServiceImpl implements InstagramService {
                         requests.add(new TelegramRequest("photo", postUrls));
                     }
                 }
-                if (!requests.isEmpty()){
+                if (!requests.isEmpty()) {
                     try {
                         new TelegramSender().sendMedia(requests, chatId).equals(200);
                     } catch (Exception e) {
@@ -290,6 +299,6 @@ public class InstagramServiceImpl implements InstagramService {
             // Обработка ошибки записи в файл
             e.printStackTrace();
         }
-}
+    }
 }
 

@@ -4,8 +4,8 @@ import java.io.*;
 
 public class PythonRunner {
     public String runner(String instaUrl) {
-        String url ="https://saveig.app/api/ajaxSearch";
-        String response="";
+        String url = "https://saveig.app/api/ajaxSearch";
+        String response = "";
         try {
             // Создаем объект ProcessBuilder с командой Python и аргументами
             ProcessBuilder pb = new ProcessBuilder("python3", "python/request.py", url, instaUrl);
@@ -27,9 +27,9 @@ public class PythonRunner {
 
             // Используем полученный вывод в Java
             response = output.toString();
-            System.out.println("RESPONSE py-> "+response);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return response;
-    }}
+    }
+}

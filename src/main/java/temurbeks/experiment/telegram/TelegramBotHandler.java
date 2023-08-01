@@ -4,6 +4,7 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -42,9 +43,8 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         Message message = update.getMessage();
         Long userId = message.getChatId();
         String text = message.getText();
-        System.out.println("TELEGRAM : \n" + message.getChat().toString());
         String name;
-        if (message.getChat().getLastName().equals("null")) {
+        if (StringUtils.isEmpty(message.getChat().getLastName())) {
             name = message.getChat().getFirstName();
         } else {
             name = message.getChat().getFirstName() + " " + message.getChat().getLastName();
@@ -86,9 +86,9 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
                     "Author/Автор: @Mr_Temurbek");
         } else if (text.startsWith("TO_ALL")) {
             text = text.substring(6);
-            instagram.sendToAll(new StringEntity(text));
+            instagram.sendToAll(new StringEntity(text), tgUser);
         }else if (text.startsWith("GET_ALL")) {
-            instagram.getAll();
+            instagram.getAll(tgUser);
         } else {
             sender(message, "Не правильный запрос на бот, \n отправьте ссылку на бот!");
         }

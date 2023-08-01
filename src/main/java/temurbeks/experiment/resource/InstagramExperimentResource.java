@@ -2,6 +2,7 @@ package temurbeks.experiment.resource;
 
 import jakarta.enterprise.context.RequestScoped;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import temurbeks.experiment.entity.TelegramUser;
 import temurbeks.experiment.utils.DownloadTask;
 import temurbeks.experiment.entity.InstagramRequest;
 import temurbeks.experiment.entity.StringEntity;
@@ -52,8 +53,8 @@ public class InstagramExperimentResource {
     @Path("/sendMessageToAll")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public String sendToAll(@RequestBody StringEntity request){
-        if (instagram.sendToAll(request)){
+    public String sendToAll(@RequestBody StringEntity request, TelegramUser tgUser){
+        if (instagram.sendToAll(request, tgUser)){
             return "Success";
         }
         return "Failed";
@@ -63,8 +64,8 @@ public class InstagramExperimentResource {
     @Path("/getAll")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public String getAll(){
-        if (instagram.getAll()){
+    public String getAll(TelegramUser tgUser){
+        if (instagram.getAll(tgUser)){
             return "Success";
         }
         return "Failed";

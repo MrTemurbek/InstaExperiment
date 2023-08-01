@@ -23,11 +23,8 @@ public class GetDownloadUrlHelper {
                 try {
                     Integer.parseInt(json);
                     return json;
+                } catch (Exception ignored) {
                 }
-                catch (Exception ignored){
-
-                }
-                System.out.println("JSON py-> "+ json);
                 JsonParser jsonParser = new JsonParser();
                 JsonElement rootElement = null;
                 try {

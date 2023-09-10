@@ -17,37 +17,51 @@ public class GetDownloadUrlHelper {
     public String getUrl(String url, Type type, String chat) throws IOException, InterruptedException {
         HttpClient httpClient = HttpClientBuilder.create().build();
         if (type.equals(Type.REELS) || type.equals(Type.POST)) {
-            String json;
-            try {
-                json = new PythonRunner().runner(url);
-                try {
-                    Integer.parseInt(json);
-                    return json;
-                } catch (Exception ignored) {
+            int index = url.indexOf("?");
+            if (index != -1) {
+                if( url.contains("/reels/")){
+                    url = url.replaceFirst("/reels/", "/reel/");
+
                 }
-                JsonParser jsonParser = new JsonParser();
+                url= url.substring(0, index) + "?__a=1&__d=dis";
+            } else {
+                url= url+"?__a=1&__d=dis";
+            }
+            HttpGet request = new HttpGet(url);
+            System.out.println("url -> "+ url);
+            try {
+                HttpResponse response = httpClient.execute(request);
+
+                System.out.println("RESPONSE -> " + response);
+                HttpEntity entity1 = response.getEntity();
+                String json = EntityUtils.toString(entity1);
+                JsonParser jsonParser =new Gson().fromJson(json, JsonParser.class);
                 JsonElement rootElement = null;
                 try {
                     rootElement = jsonParser.parse(json);
                 } catch (Exception e) {
-                    System.out.println("Error json ->" + json);
-                    new SendMessageToBot().sendMessage("Проблема с Saveinsta ☹️, свяжитесь с @Mr_Temurbek", chat);
+                    new SendMessageToBot().sendMessage("Error with Servers ☹️, contact to @Mr_Temurbek \n \n" +
+                            " Проблема с Сервером ☹️, свяжитесь с @Mr_Temurbek", chat);
                 }
 
                 JsonObject jsonObject = rootElement.getAsJsonObject();
                 try {
-                    String mess = jsonObject.get("mess").getAsString();
-                    if (mess.contains("Video is private")) {
+                    Boolean mess = jsonObject.get("require_login").getAsBoolean();
+                    if (mess) {
                         throw new MyException();
                     }
                 } catch (NullPointerException ignored) {
 
                 }
                 return json;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return "Error occurred while fetching data from JSON";
             } catch (MyException e) {
                 new SendMessageToBot().sendMessage(" ❌❌❌ Обработка не удалась ❌❌❌\n 🔒 Закрытый аккаунт 🔒", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }
+
         } else {
             String fullUrl = "https://igram.world/api/ig/story" + "?" + "url" + "=" + url;
 
@@ -67,7 +81,7 @@ public class GetDownloadUrlHelper {
                 e.printStackTrace();
                 return "Error occurred while fetching data from JSON";
             } catch (MyException e) {
-                new SendMessageToBot().sendMessage("  ❌❌❌ Обработка не удалась ❌❌❌ \n 🔒 Видимо закрытый аккаунт 🔒 \n или \uD83E\uDEAB Сервер не работает \uD83E\uDEAB", chat);
+                new SendMessageToBot().sendMessage("  ❌❌❌ Обработка не удалась ❌❌❌ \n 🔒 Закрытый аккаунт 🔒", chat);
                 throw new RuntimeException("zakritiy akkaunt");
             }
 

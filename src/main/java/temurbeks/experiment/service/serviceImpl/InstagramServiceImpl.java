@@ -27,10 +27,13 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static temurbeks.experiment.utils.Extractor.getDownloadUrlForStories;
+import static temurbeks.experiment.utils.Extractor.postOrReelsExtractor;
+
 
 @ApplicationScoped
 public class InstagramServiceImpl implements InstagramService {
-    static Type instaType;
+    public static Type instaType;
     @Inject
     TelegramService telegramService;
     List<String> userIds = new ArrayList<>();
@@ -64,27 +67,9 @@ public class InstagramServiceImpl implements InstagramService {
         }
         instaType = getInstaType(data.getUrl());
         LocalDateTime requestTime = LocalDateTime.now();
-        int index = data.getUrl().indexOf("?");
-        if (index != -1) {
-//            url = url.substring(0, index) + "?__a=1&__d=dis";
-        } else {
-//            url =url+"?__a=1&__d=dis";
-        }
         List<String> responseUrl;
         String json = new GetDownloadUrlHelper().getUrl(data.getUrl(), instaType, data.getChat());
-        try {
-            Integer.parseInt(json);
-            sendMessageToBot.sendMessage("Пожайлуста повторите позже, после " + json + " секунд", data.getChat());
-            return "SUCCESS";
-        } catch (Exception ignored) {
-
-        }
-        if (instaType.equals(Type.STORIES)) {
-            responseUrl = extractUrlsFromData(json, data.getChat());
-        } else {
-            TemporaryResponse temporaryResponse = new ObjectMapper().readValue(json, TemporaryResponse.class);
-            responseUrl = extractUrlsFromData(temporaryResponse.getData(), data.getChat());
-        }
+        responseUrl = extractUrlsFromData(json, data.getChat());
         try {
             telegramService.sendAllToBotFromUrl(responseUrl, data.getUrl(), requestTime, data.getChat(), instaType);
         } catch (Exception e) {
@@ -131,7 +116,7 @@ public class InstagramServiceImpl implements InstagramService {
 
     private static List<String> extractUrlsFromData(String data, String chatId) {
         if (instaType.equals(Type.POST) || instaType.equals(Type.REELS)) {
-            return imageSrcOrHrefExtractor(data, chatId);
+            return postOrReelsExtractor(data, chatId);
         } else {
             return getDownloadUrlForStories(data);
         }
@@ -146,119 +131,6 @@ public class InstagramServiceImpl implements InstagramService {
         } else {
             return Type.POST;
         }
-    }
-
-    public static List<String> imageSrcOrHrefExtractor(String html, String chatId) {
-        Document doc = Jsoup.parse(html);
-        List<String> srcUrl = new ArrayList<>();
-        List<String> hrefUrl = new ArrayList<>();
-        List<String> extractUrl = new ArrayList<>();
-        // Извлечение значений атрибута src из тегов img и href
-
-        Elements hrefTags = doc.select("a");
-        for (Element hrefTag : hrefTags) {
-
-            if (hrefTag.attr("href").contains(".xyz")) {
-                hrefUrl.add(hrefTag.attr("href"));
-            }
-        }
-        Elements divElements = doc.select("div").attr("src", "download-items__thumb");
-        for (Element divElement : divElements) {
-            String element = divElement.select("img").attr("src");
-            if (element.contains(".xyz") && element.contains("jpg%3fstp%3ddst-jpg")) {
-                extractUrl.add(element);
-            }
-        }
-
-        Elements imgTags = doc.select("img");
-        for (Element imgTag : imgTags) {
-            if (imgTag.attr("src").contains(".xyz")) {
-                srcUrl.add(imgTag.attr("src"));
-            }
-            if (imgTag.attr("data-src").contains(".xyz")) {
-                srcUrl.add(imgTag.attr("data-src"));
-            }
-        }
-        if (!hrefUrl.isEmpty()) {
-            if (!srcUrl.isEmpty() && !extractUrl.isEmpty()) {
-                ArrayList<TelegramRequest> requests = new ArrayList<>();
-
-                for (String postUrls : srcUrl) {
-                    if (!extractUrl.contains(postUrls)) {
-                        requests.add(new TelegramRequest("photo", postUrls));
-                    }
-                }
-                if (!requests.isEmpty()) {
-                    try {
-                        new TelegramSender().sendMedia(requests, chatId).equals(200);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.err.println("Не смогли отправить фотки");
-                    }
-                }
-            }
-            instaType = Type.REELS;
-            return hrefUrl;
-        }
-        return srcUrl;
-    }
-
-    public static List<String> getDownloadUrlForStories(String data) {
-        Gson gson = new Gson();
-        JsonParser jsonParser = new JsonParser();
-        JsonElement rootElement = jsonParser.parse(data);
-
-        JsonObject jsonObject = rootElement.getAsJsonObject();
-        JsonArray videoVersions = null;
-        try {
-            videoVersions = jsonObject.get("result")
-                    .getAsJsonArray().get(0).getAsJsonObject()
-                    .get("video_versions").getAsJsonArray();
-        } catch (Exception ignored) {
-
-        }
-        JsonArray candidates = jsonObject.get("result")
-                .getAsJsonArray().get(0).getAsJsonObject()
-                .get("image_versions2").getAsJsonObject()
-                .get("candidates").getAsJsonArray();
-
-
-        if (videoVersions == null) {
-            for (JsonElement element : candidates) {
-                JsonObject candidate = element.getAsJsonObject();
-                int width = candidate.get("width").getAsInt();
-                int height = candidate.get("height").getAsInt();
-                String url = candidate.get("url").getAsString();
-                JsonObject urlSignatureObject = candidate.getAsJsonObject("url_signature");
-                UrlSignature urlSignature = gson.fromJson(urlSignatureObject, UrlSignature.class);
-
-                PhotoStories photoStory = new PhotoStories();
-                photoStory.setWidth(width);
-                photoStory.setHeight(height);
-                photoStory.setUrl(url);
-                photoStory.setUrl_signature(urlSignature);
-                instaType = Type.POST;
-                return List.of(photoStory.getUrl());
-            }
-        }
-        for (JsonElement element : videoVersions) {
-            JsonObject videoVersion = element.getAsJsonObject();
-            int type = videoVersion.get("type").getAsInt();
-            int width = videoVersion.get("width").getAsInt();
-            int height = videoVersion.get("height").getAsInt();
-            String url = videoVersion.get("url").getAsString();
-            JsonObject urlSignatureObject = videoVersion.getAsJsonObject("url_signature");
-            UrlSignature urlSignature = gson.fromJson(urlSignatureObject, UrlSignature.class);
-
-            VideoStories videoStory = new VideoStories();
-            videoStory.setType(type);
-            videoStory.setWidth(width);
-            videoStory.setHeight(height);
-            videoStory.setUrl(url);
-            videoStory.setUrl_signature(urlSignature);
-            return List.of(videoStory.getUrl());
-        }
-        throw new NoSuchElementException("Такое не возможно, или код не правильный");
     }
 
 

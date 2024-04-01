@@ -11,22 +11,17 @@ import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.polls.PollAnswer;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-import temurbeks.experiment.entity.InstagramRequest;
-import temurbeks.experiment.entity.StringEntity;
+import temurbeks.experiment.entity.QuizEntity;
 import temurbeks.experiment.entity.TelegramUser;
 import temurbeks.experiment.service.InstagramService;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import static temurbeks.experiment.utils.TemplateExtractor.extractValues;
 
 @ApplicationScoped
 public class TelegramBotHandler extends TelegramLongPollingBot {
@@ -61,49 +56,16 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
             username = message.getChat().getUserName();
         }
         TelegramUser tgUser = new TelegramUser(userId.toString(), name, username);
-        long currentTime = System.currentTimeMillis();
 
-        if (text.contains("instagram.com/")) {
-            // Check if the chatId was processed before and calculate the time difference
-            long lastProcessedTimestamp = lastProcessedTimestamps.getOrDefault(userId, 0L);
-            long timeDifference = currentTime - lastProcessedTimestamp;
-
-            // Update the last processed timestamp for this chatId
-            lastProcessedTimestamps.put(userId, System.currentTimeMillis());
-
-            // Process the request with a new thread
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            String finalText = text;
-            executorService.execute(() -> {
-                try {
-                    instagram.getLinkVideo(new InstagramRequest(finalText, userId.toString()), tgUser);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-            executorService.shutdown();
-
-            // If there is a time difference, wait before processing other requests
-            if (timeDifference > 0) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else if (text.contains("/start")) {
-            sender(message, "Привет, этот бот поможет скачать видео с Инстаграма \n" +
-                    "Hello, this bot can help you with downloading Instagram video \n \n" +
+        if (text.contains("/start")) {
+            sender(message, "Привет, этот бот поможет создать опросник \n" +
+                    "Hello, this bot can help you with creation quizzes \n \n" +
                     "Author/Автор: @Mr_Temurbek");
-        } else if (text.startsWith("TO_ALL")) {
-            text = text.substring(6);
-            instagram.sendToAll(new StringEntity(text), tgUser);
-        } else if (text.startsWith("GET_ALL")) {
-            instagram.getAll(tgUser);
-        } else if (text.contains("QUIZZES")) {
-            pollCreator(message, "Text");
+        } else if (text.toLowerCase().contains("question")) {
+            QuizEntity quizEntity = extractValues(text);
+            pollCreator(message, quizEntity.getQuestion(), quizEntity.getOptions(), quizEntity.getCorrectOption(), quizEntity.getExplanation());
         } else {
-            sender(message, "Не правильный запрос на бот, \n отправьте ссылку на бот!");
+            sender(message, "Не правильный запрос на бот!");
         }
     }
 
@@ -150,24 +112,19 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         }
     }
 
-    public void pollCreator(Message message, String quiz) {
-        String question = "Is it ok ?";
-        String pollId = UUID.randomUUID().toString();
-        Integer optionId1 = 1;
-        Integer optionId2 = 2;
-        Integer optionId3 = 3;
-        List<String> options = List.of("one", "two", "three");
+    public void pollCreator(Message message, String question, List<String> options, Integer correctOption, String explanation) {
+
         Boolean isAnonymous = true;
-        PollAnswer answer = new PollAnswer(pollId, new User(), List.of(optionId1, optionId2, optionId3));
-        Integer correctOption = 1;
         String pollType = "quiz";
         Boolean allowMulltipleVotes = false;
         Boolean isClosed = false;
         Boolean disableNotifications = false;
-        Integer replyToMessageId = 0;
         Integer openPeriod = null;
         Integer closeDate = null;
-        String explanation = "Working";
+
+        if (StringUtils.isEmpty(explanation) || explanation.contains("null")) {
+            explanation = null;
+        }
 
         SendPoll sendPoll = new SendPoll(message.getChatId().toString(), 0, question, options, isAnonymous, pollType,
                 allowMulltipleVotes, correctOption,
@@ -177,7 +134,6 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
 
         try {
             execute(sendPoll);
-
         } catch (TelegramApiException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

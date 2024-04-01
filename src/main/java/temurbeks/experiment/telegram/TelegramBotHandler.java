@@ -7,9 +7,12 @@ import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.polls.PollAnswer;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import temurbeks.experiment.entity.InstagramRequest;
@@ -19,7 +22,9 @@ import temurbeks.experiment.service.InstagramService;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,8 +35,8 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
         this.instagram = instagram;
     }
 
-    private String USERNAME = "instagram_down_robot";
-    private String TOKEN = "5969680619:AAF6C7DwXEzHpv61Q8z9I7MaoknbKAJ6ZTs";
+    private String USERNAME = "Pomoshnik_uz_robot";
+    private String TOKEN = "1497637733:AAGs5QgCmrMf_Qqxh5KuDcKAge2TLtjlKD8";
 
     @Inject
     InstagramService instagram;
@@ -95,6 +100,8 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
             instagram.sendToAll(new StringEntity(text), tgUser);
         } else if (text.startsWith("GET_ALL")) {
             instagram.getAll(tgUser);
+        } else if (text.contains("QUIZZES")) {
+            pollCreator(message, "Text");
         } else {
             sender(message, "Не правильный запрос на бот, \n отправьте ссылку на бот!");
         }
@@ -127,7 +134,7 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
             telegramBotHandler.setUSERNAME(USERNAME);
             telegramBotsApi.registerBot(telegramBotHandler);
         } catch (TelegramApiException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -142,5 +149,40 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
             e.printStackTrace();
         }
     }
+
+    public void pollCreator(Message message, String quiz) {
+        String question = "Is it ok ?";
+        String pollId = UUID.randomUUID().toString();
+        Integer optionId1 = 1;
+        Integer optionId2 = 2;
+        Integer optionId3 = 3;
+        List<String> options = List.of("one", "two", "three");
+        Boolean isAnonymous = true;
+        PollAnswer answer = new PollAnswer(pollId, new User(), List.of(optionId1, optionId2, optionId3));
+        Integer correctOption = 1;
+        String pollType = "quiz";
+        Boolean allowMulltipleVotes = false;
+        Boolean isClosed = false;
+        Boolean disableNotifications = false;
+        Integer replyToMessageId = 0;
+        Integer openPeriod = null;
+        Integer closeDate = null;
+        String explanation = "Working";
+
+        SendPoll sendPoll = new SendPoll(message.getChatId().toString(), 0, question, options, isAnonymous, pollType,
+                allowMulltipleVotes, correctOption,
+                isClosed, disableNotifications, 0,
+                null, openPeriod, closeDate, explanation,
+                null, null, true, true);
+
+        try {
+            execute(sendPoll);
+
+        } catch (TelegramApiException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
 }

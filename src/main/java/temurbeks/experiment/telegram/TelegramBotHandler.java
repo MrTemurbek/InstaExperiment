@@ -62,7 +62,12 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
                     "Hello, this bot can help you with creation quizzes \n \n" +
                     "Author/Автор: @Mr_Temurbek");
         } else if (text.toLowerCase().contains("question")) {
-            QuizEntity quizEntity = extractValues(text);
+            QuizEntity quizEntity = new QuizEntity();
+            try {
+                quizEntity = extractValues(text);
+            }catch (Exception e){
+                sender(message,e.getMessage());
+            }
             pollCreator(message, quizEntity.getQuestion(), quizEntity.getOptions(), quizEntity.getCorrectOption(), quizEntity.getExplanation());
         } else {
             sender(message, "Не правильный запрос на бот!");
@@ -130,11 +135,12 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
                 allowMulltipleVotes, correctOption,
                 isClosed, disableNotifications, 0,
                 null, openPeriod, closeDate, explanation,
-                null, null, true, true);
+                null, null, true, false);
 
         try {
             execute(sendPoll);
         } catch (TelegramApiException e) {
+            sender(message, e.getMessage() );
             System.out.println(e.getMessage());
             e.printStackTrace();
         }

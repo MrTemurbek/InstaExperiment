@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class TemplateExtractor {
     public static QuizEntity extractValues(String template) {
         List<String> extractedValues = new ArrayList<>();
-        Pattern pattern = Pattern.compile("Question:\\s*(.*?)Options:\\s*(.*?)Correct Option:\\s*(.*?)Explanation \\(Optional\\):\\s*(.*)",
+        Pattern pattern = Pattern.compile("Question:\\s*(.*?)Options:\\s*(.*?)Correct Option:\\s*(.*?)Explanation:\\s*(.*)",
                 Pattern.DOTALL);
         Matcher matcher = pattern.matcher(template);
         if (matcher.find()) {
@@ -28,11 +28,12 @@ public class TemplateExtractor {
         List<String> options = new ArrayList<>();
         for (int i = 1; i < extractedValues.size(); i++) {
             if (options.contains(extractedValues.get(i))){
-                quizEntity.setCorrectOption(i-1);
+                quizEntity.setCorrectOption(options.indexOf(extractedValues.get(i)));
                 break;
             }
             options.add(extractedValues.get(i));
         }
+        quizEntity.setOptions(options);
         quizEntity.setExplanation(extractedValues.get(extractedValues.size() - 1));
         return quizEntity;
     }

@@ -69,13 +69,8 @@ public class TelegramBotHandler extends TelegramLongPollingBot {
             // Process the request with a new thread
             ExecutorService executorService = Executors.newSingleThreadExecutor();
             String finalText = text;
-            executorService.execute(() -> {
-                try {
-                    instagram.getLinkVideo(new InstagramRequest(finalText, userId.toString()), tgUser);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
+            executorService.execute(()
+                    -> instagram.getLinkVideo(new InstagramRequest(finalText, userId.toString()), tgUser));
             executorService.shutdown();
 
             // If there is a time difference, wait before processing other requests

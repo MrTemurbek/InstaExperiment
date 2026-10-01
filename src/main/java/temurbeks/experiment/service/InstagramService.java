@@ -7,7 +7,7 @@ import temurbeks.experiment.entity.TelegramUser;
 import java.io.IOException;
 
 public interface InstagramService {
-    String getLinkVideo(InstagramRequest request, TelegramUser tgUser) throws IOException, InterruptedException;
+    String getLinkVideo(InstagramRequest request, TelegramUser tgUser);
     Boolean sendToAll(StringEntity message, TelegramUser tgUser);
     Boolean getAll(TelegramUser tgUser);
 }

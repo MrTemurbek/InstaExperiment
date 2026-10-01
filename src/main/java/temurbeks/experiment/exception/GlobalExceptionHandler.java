@@ -17,9 +17,8 @@ public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
     @Override
     public Response toResponse(Exception e) {
         e.printStackTrace();
-        Response response = Response.status(200).type("application/json")
+        return Response.status(200).type("application/json")
                 .entity(new RuntimeException("GLOBALKA")).build();
-        return response;
 
     }
 }
